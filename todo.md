@@ -10,7 +10,7 @@
 [] Anja|00h00|Créer le menu administrateur (/admin)|Routes.php, admin/layout.php
 
 
-[] Bryan|00h00|Créer les modèles ClientModel, CompteModel, TransactionModel|app/Models/*
+[x] Bryan|00h00|Créer les modèles ClientModel, CompteModel, TransactionModel|app/Models/*
 [] Bryan|00h00|Développer le login automatique avec numéro de téléphone|Client/AuthController.php, client/login.php
 [] Bryan|00h00|Développer l'affichage du solde|Client/CompteController.php, client/solde.php
 [] Bryan|00h00|Développer le dépôt automatique|Client/DepotController.php, client/depot.php

@@ -545,7 +545,7 @@ class ClientController extends BaseController
                     'numero_destination'       => $dest['numero'],
                     'operateur_destination_id' => $dest['operateur_id'],
                     'montant'                  => $montantParPersonne,
-                    'frais'                    => $dest['frais_base'],
+                    'frais_base'                    => $dest['frais_base'],
                     'frais_commission_externe' => $dest['commission_externe'],
                     'frais_retrait_inclus'     => $dest['frais_retrait_inclus'],
                     'frais_total'              => $dest['frais_total']

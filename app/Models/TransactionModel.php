@@ -15,7 +15,7 @@ class TransactionModel extends Model
         'numero_destination',        // NOUVEAU V2
         'operateur_destination_id', // NOUVEAU V2
         'montant',
-        'frais',                     // frais de base
+        'frais_base',                     // frais de base
         'frais_commission_externe',  // NOUVEAU V2 (%)
         'frais_retrait_inclus',      // NOUVEAU V2 (option client)
         'frais_total',               // NOUVEAU V2
@@ -282,7 +282,7 @@ class TransactionModel extends Model
      */
     public function getTotalFraisByPeriode($dateDebut, $dateFin)
     {
-        $result = $this->select('SUM(frais) as total')
+        $result = $this->select('SUM(frais_base) as total')
                        ->where('date_transaction >=', $dateDebut)
                        ->where('date_transaction <=', $dateFin)
                        ->first();
@@ -393,7 +393,7 @@ class TransactionModel extends Model
                 $solde += $transaction->montant;
             }
             if ($transaction->compte_source == $compteId) {
-                $solde -= ($transaction->montant + $transaction->frais);
+                $solde -= ($transaction->montant + $transaction->frais_base);
             }
         }
 

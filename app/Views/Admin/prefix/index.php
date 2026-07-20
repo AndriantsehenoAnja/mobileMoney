@@ -4,7 +4,7 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>📞 Liste des Préfixes Téléphoniques (V2)</h2>
-    <a href="<?= site_url('admin/prefix/form') ?>" class="btn btn-success">➕ Créer un nouveau préfixe</a>
+    <a href="<?= site_url('Admin/prefix/form') ?>" class="btn btn-success">➕ Créer un nouveau préfixe</a>
 </div>
 
 <?php if (!empty($prefixes)): ?>
@@ -38,8 +38,8 @@
                         <?php endif; ?>
                     </td>
                     <td>
-                        <a href="<?= site_url('admin/prefix/edit/' . $id) ?>" class="btn">✏️ Modifier</a>
-                        <a href="<?= site_url('admin/prefix/delete/' . $id) ?>" 
+                        <a href="<?= site_url('Admin/prefix/edit/' . $prefix['id']) ?>" class="btn">✏️ Modifier</a>
+                        <a href="<?= site_url('Admin/prefix/delete/' . $prefix['id']) ?>" 
                            class="btn btn-danger" 
                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce préfixe ?')">🗑️ Supprimer</a>
                     </td>

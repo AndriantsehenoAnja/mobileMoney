@@ -4,7 +4,7 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>✏️ Modifier le Barème #<?= is_array($bareme) ? $bareme['id'] : $bareme->id ?></h2>
-    <a href="<?= site_url('admin/bareme') ?>" class="btn">🔙 Annuler</a>
+    <a href="<?= site_url('Admin/bareme') ?>" class="btn">🔙 Annuler</a>
 </div>
 
 <?php 
@@ -17,7 +17,7 @@
     $bReseau = is_array($bareme) ? ($bareme['reseau_cible'] ?? 'INTERNE') : ($bareme->reseau_cible ?? 'INTERNE');
 ?>
 
-<form action="<?= site_url('admin/bareme/update/' . $bId) ?>" method="post">
+<form action="<?= site_url('Admin/bareme/update/' . $bId) ?>" method="post">
     <?= csrf_field() ?>
 
     <div style="margin-bottom: 15px;">

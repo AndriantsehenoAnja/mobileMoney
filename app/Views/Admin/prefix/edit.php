@@ -11,10 +11,10 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>✏️ Modifier le Préfixe #<?= $pId ?></h2>
-    <a href="<?= site_url('admin/prefix') ?>" class="btn">🔙 Annuler</a>
+    <a href="<?= site_url('Admin/prefix') ?>" class="btn">🔙 Annuler</a>
 </div>
 
-<form action="<?= site_url('admin/prefix/update/' . $pId) ?>" method="post">
+<form action="<?= site_url('Admin/prefix/update/' . $prefix['id']) ?>" method="post">
     <?= csrf_field() ?>
 
     <div style="margin-bottom: 15px;">

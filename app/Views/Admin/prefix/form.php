@@ -7,7 +7,7 @@
     <a href="<?= site_url('admin/prefix') ?>" class="btn">🔙 Retour à la liste</a>
 </div>
 
-<form action="<?= site_url('admin/prefix/create') ?>" method="post">
+<form action="<?= site_url('Admin/prefix/create') ?>" method="post">
     <?= csrf_field() ?>
 
     <!-- Champ Préfixe -->

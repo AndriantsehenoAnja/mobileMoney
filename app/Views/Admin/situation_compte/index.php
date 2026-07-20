@@ -4,7 +4,7 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>👥 Situation Récapitulative des Comptes Clients</h2>
-    <a href="<?= site_url('admin/situation-compte/gain-total') ?>" class="btn btn-success">💰 Voir rapport des gains</a>
+    <a href="<?= site_url('Admin/situation-compte/gain-total') ?>" class="btn btn-success">💰 Voir rapport des gains</a>
 </div>
 
 <?php if (!empty($clientsSituation)): ?>

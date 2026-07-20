@@ -4,7 +4,7 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>📊 Configuration des Barèmes de Frais (V2)</h2>
-    <a href="<?= site_url('admin/bareme/addbareme') ?>" class="btn btn-success">➕ Nouveau Barème</a>
+    <a href="<?= site_url('Admin/bareme/addbareme') ?>" class="btn btn-success">➕ Nouveau Barème</a>
 </div>
 
 <?php if (!empty($baremes)): ?>
@@ -53,8 +53,8 @@
                         <?php endif; ?>
                     </td>
                     <td>
-                        <a href="<?= site_url('admin/bareme/edit/' . $id) ?>" class="btn">✏️ Modifier</a>
-                        <a href="<?= site_url('admin/bareme/delete/' . $id) ?>" class="btn btn-danger" onclick="return confirm('Supprimer ce barème ?')">🗑️</a>
+                        <a href="<?= site_url('Admin/bareme/edit/' . $bareme['id']) ?>">Modifier</a>
+                        <a href="<?= site_url('Admin/bareme/delete/' . $id) ?>" class="btn btn-danger" onclick="return confirm('Supprimer ce barème ?')">🗑️</a>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -63,7 +63,7 @@
 <?php else: ?>
     <div style="text-align: center; padding: 40px; color: #6b7280;">
         <p style="font-size: 18px;">Aucun barème de frais configuré.</p>
-        <a href="<?= site_url('admin/bareme/addbareme') ?>" class="btn btn-success" style="margin-top: 10px;">Créer le premier barème</a>
+        <a href="<?= site_url('Admin/bareme/addbareme') ?>" class="btn btn-success" style="margin-top: 10px;">Créer le premier barème</a>
     </div>
 <?php endif; ?>
 

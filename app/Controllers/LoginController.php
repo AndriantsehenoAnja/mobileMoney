@@ -16,7 +16,7 @@ class LoginController extends BaseController
             return redirect()->to('/Client');
         }
         
-        return view('login');
+        return view('Client/login');
     }
 
     public function login()

@@ -4,7 +4,7 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>💰 Rapport des Gains et Commissions (V2)</h2>
-    <a href="<?= site_url('admin/situation-compte/operateurs') ?>" class="btn">🔄 Voir montants dus aux opérateurs</a>
+    <a href="<?= site_url('Admin/situation-compte/operateurs') ?>" class="btn">🔄 Voir montants dus aux opérateurs</a>
 </div>
 
 <p style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">

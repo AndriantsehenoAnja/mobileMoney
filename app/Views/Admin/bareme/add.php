@@ -4,10 +4,10 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>➕ Ajouter un nouveau Barème (V2)</h2>
-    <a href="<?= site_url('admin/bareme') ?>" class="btn">🔙 Retour à la liste</a>
+    <a href="<?= site_url('Admin/bareme') ?>" class="btn">🔙 Retour à la liste</a>
 </div>
 
-<form action="<?= site_url('admin/bareme/addbareme') ?>" method="post">
+<form action="<?= site_url('Admin/bareme/addbareme') ?>" method="post">
     <?= csrf_field() ?>
 
     <div style="margin-bottom: 15px;">

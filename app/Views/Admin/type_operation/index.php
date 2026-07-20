@@ -5,7 +5,7 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>Types d'Opérations</h2>
     <div>
-        <a href="<?= site_url('Admin/bareme/addbareme') ?>" class="btn btn-success">➕ Nouveau Barème</a>
+        <a href="<?= site_url('admin/bareme/addbareme') ?>" class="btn btn-success">➕ Nouveau Barème</a>
     </div>
 </div>
 

@@ -8,9 +8,9 @@
 <body>
     <a href="/client/profil">Profil</a>
     <a href="/client/transactions">Transactions</a>
-    <a href="/client/depot">Depots</a>
-    <a href="/client/retrait">Retraits</a>
-    <a href="/client/deconnexion">Déconnexion</a>
+    <a href="/depot">Depots</a>
+    <a href="/retrait">Retraits</a>
+    <a href="/deconnexion">Déconnexion</a>
     <h1>Bienvenue, Client!</h1>
     <h1>Votre Solde Actuelle: <?= $solde ?></h1>
 </body>

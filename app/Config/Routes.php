@@ -12,8 +12,15 @@ $routes->post('login/authenticate', 'LoginController::login');
 $routes->get('/logout','ClientController::logout');
 
 $routes->get('/Client', 'ClientController::index', ['filter' => 'auth']);
+// Dépôt
 $routes->get('/depot', 'ClientController::depot', ['filter' => 'auth']);
 $routes->post('/depot/effectuer', 'ClientController::effectuerDepot', ['filter' => 'auth']);
+
+// Retrait
+$routes->get('/retrait', 'ClientController::retrait', ['filter' => 'auth']);
+$routes->post('/retrait/effectuer', 'ClientController::effectuerRetrait', ['filter' => 'auth']);
+
+
 
 $routes->group('prefix', ['namespace' => 'App\Controllers'], function ($routes) {
     $routes->get('/', 'PrefixController::index');

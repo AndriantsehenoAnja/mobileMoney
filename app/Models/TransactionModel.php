@@ -22,6 +22,14 @@ class TransactionModel extends Model
     /**
      * Récupérer les transactions d'un compte avec toutes les infos
      */
+        // getGainTotalParType
+    public function getGainTotalParType()
+    {
+        return $this->select('type_operations.nom as type_operation, SUM(baremes_frais.montant) as total_gain')
+                    ->join('baremes_frais', 'baremes_frais.type_operation_id = type_operations.id', 'left')
+                    ->groupBy('type_operations.nom')
+                    ->findAll();
+    }
     public function getTransactionsByCompte($compteId, $limit = null, $offset = 0)
     {
         $query = $this->select('transactions.*, 

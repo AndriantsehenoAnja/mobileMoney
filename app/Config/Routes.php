@@ -35,3 +35,8 @@ $routes->group('bareme', ['namespace' => 'App\Controllers'], function ($routes) 
     $routes->get('addbareme', 'BaremeController::form');
 
 });
+
+$routes->group('situation-compte', ['namespace' => 'App\Controllers'], function ($routes) {
+    $routes->get('/', 'SituationCompteController::index');
+    $routes->get('gain-total', 'SituationCompteController::getGainTotalParType');
+});

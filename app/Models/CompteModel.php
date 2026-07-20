@@ -13,6 +13,16 @@ class CompteModel extends Model
         'solde'
     ];
     protected $returnType = 'object';
+    
+    public function getSituationComptes()
+    {
+        // On utilise la table principale définie ($this->table qui est 'comptes')
+        return $this->select('comptes.id as compte_id, comptes.solde, clients.nom, clients.numero, prefixes.prefixe, clients.date_creation')
+                    ->join('clients', 'clients.id = comptes.client_id', 'right') // RIGHT ou LEFT selon si on veut afficher même les clients sans compte
+                    ->join('prefixes', 'prefixes.id = clients.prefixe_id', 'left')
+                    ->findAll(); // Retournera un tableau d'objets grâce à $returnType = 'object'
+    }
+
 
     /**
      * Récupérer un compte par ID client
@@ -24,7 +34,7 @@ class CompteModel extends Model
 
     /**
      * Récupérer un compte avec les informations du client
-     */
+    */
     public function getCompteWithClient($compteId)
     {
         return $this->select('comptes.*, clients.nom, clients.numero, prefixes.prefixe')
@@ -33,6 +43,7 @@ class CompteModel extends Model
                     ->where('comptes.id', $compteId)
                     ->first();
     }
+
 
     /**
      * Récupérer un compte par numéro client

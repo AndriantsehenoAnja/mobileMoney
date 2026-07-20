@@ -23,13 +23,17 @@ class TransactionModel extends Model
      * Récupérer les transactions d'un compte avec toutes les infos
      */
         // getGainTotalParType
+/**
+     * Calcule le gain réel généré par type d'opération (retrait, transfert, etc.)
+     * en faisant la somme des frais perçus sur les transactions passées.
+     */
     public function getGainTotalParType()
     {
-        return $this->select('type_operations.nom as type_operation, SUM(baremes_frais.montant) as total_gain')
-                    ->join('baremes_frais', 'baremes_frais.type_operation_id = type_operations.id', 'left')
-                    ->groupBy('type_operations.nom')
-                    ->findAll();
-    }
+        return $this->select('types_operations.nom as type_operation, SUM(transactions.frais) as total_gain')
+                    ->join('types_operations', 'types_operations.id = transactions.type_operation_id')
+                    ->groupBy('transactions.type_operation_id, types_operations.nom')
+                    ->findAll(); // Retourne un tableau d'objets avec type_operation et total_gain
+    } 
     public function getTransactionsByCompte($compteId, $limit = null, $offset = 0)
     {
         $query = $this->select('transactions.*, 

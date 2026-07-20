@@ -52,4 +52,9 @@ class PrefixModel extends Model
     {
         return $this->delete($id);
     }
+
+    public function findByPrefixe(string $prefixe)
+    {
+        return $this->where('prefixe', $prefixe)->first();
+    }
 }

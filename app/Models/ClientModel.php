@@ -19,8 +19,40 @@ class ClientModel extends Model
     protected $returnType = 'object';
 
     /**
-     * @param string $numero 
-     * @return array 
+     * Récupérer un client par son numéro de téléphone
+     */
+    public function findByNumero($numero)
+    {
+        return $this->where('numero', $numero)->first();
+    }
+
+    /**
+     * Récupérer un client avec son compte et son préfixe
+     */
+    public function getClientWithCompte($clientId)
+    {
+        return $this->select('clients.*, comptes.solde, prefixes.prefixe')
+                    ->join('comptes', 'comptes.client_id = clients.id', 'left')
+                    ->join('prefixes', 'prefixes.id = clients.prefixe_id', 'left')
+                    ->where('clients.id', $clientId)
+                    ->first();
+    }
+
+    /**
+     * Récupérer tous les clients avec leurs comptes
+     */
+    public function getAllClientsWithComptes()
+    {
+        return $this->select('clients.*, comptes.solde, prefixes.prefixe')
+                    ->join('comptes', 'comptes.client_id = clients.id', 'left')
+                    ->join('prefixes', 'prefixes.id = clients.prefixe_id', 'left')
+                    ->findAll();
+    }
+
+    /**
+     * Vérifier un numéro de téléphone client
+     * @param string $numero
+     * @return array
      */
     public function verifierNumeroClient($numero)
     {
@@ -31,15 +63,17 @@ class ClientModel extends Model
                 'valid' => false,
                 'message' => 'Le numéro doit contenir exactement 10 chiffres',
                 'client' => null,
-                'prefixe' => null
+                'prefixe' => null,
+                'client_id' => null,
+                'client_nom' => null,
+                'client_numero' => null
             ];
         }
 
-        // Extraire le préfixe (les 3 premiers chiffres)
         $prefixe = substr($numero, 0, 3);
         
-        // Vérifier si le préfixe est autorisé
-        $prefixeModel = model('PrefixeModel');
+        // ✅ Récupérer le modèle correctement
+        $prefixeModel = new \App\Models\PrefixModel();
         $prefixeInfo = $prefixeModel->findByPrefixe($prefixe);
         
         if (!$prefixeInfo) {
@@ -47,11 +81,17 @@ class ClientModel extends Model
                 'valid' => false,
                 'message' => "Le préfixe '$prefixe' n'est pas autorisé",
                 'client' => null,
-                'prefixe' => null
+                'prefixe' => null,
+                'client_id' => null,
+                'client_nom' => null,
+                'client_numero' => null
             ];
         }
 
-        // Vérifier si le client existe avec ce numéro
+        // ✅ Extraction sécurisée du préfixe (tableau)
+        $prefixeValue = is_array($prefixeInfo) ? $prefixeInfo['prefixe'] : $prefixeInfo->prefixe;
+        $prefixeId = is_array($prefixeInfo) ? $prefixeInfo['id'] : $prefixeInfo->id;
+
         $client = $this->findByNumero($numero);
         
         if (!$client) {
@@ -59,26 +99,26 @@ class ClientModel extends Model
                 'valid' => false,
                 'message' => "Aucun client trouvé avec le numéro '$numero'",
                 'client' => null,
-                'prefixe' => $prefixeInfo->prefixe
+                'prefixe' => $prefixeValue,
+                'client_id' => null,
+                'client_nom' => null,
+                'client_numero' => null
             ];
         }
 
-        // Tout est valide
-        // Tout est valide
         return [
             'valid' => true,
             'message' => 'Numéro valide',
+            'client' => $client,
+            'prefixe' => $prefixeValue,
             'client_id' => $client->id,
             'client_nom' => $client->nom,
-            'client_numero' => $client->numero,
+            'client_numero' => $client->numero
         ];
-        
     }
 
     /**
      * Vérifier si un numéro existe et retourner le client
-     * @param string $numero
-     * @return object|null Le client ou null si non trouvé
      */
     public function verifierEtGetClient($numero)
     {
@@ -87,9 +127,7 @@ class ClientModel extends Model
     }
 
     /**
-     * Vérifier uniquement si le numéro est valide (existe et préfixe autorisé)
-     * @param string $numero
-     * @return bool
+     * Vérifier uniquement si le numéro est valide
      */
     public function isNumeroValide($numero)
     {
@@ -98,53 +136,29 @@ class ClientModel extends Model
     }
 
     /**
-     * Récupérer un client avec validation du préfixe
-     * @param string $numero
-     * @return object|null
-     */
-    public function getClientWithValidation($numero)
-    {
-        $result = $this->verifierNumeroClient($numero);
-        if ($result['valid'] && $result['client']) {
-            // Ajouter le préfixe aux données du client
-            $result['client']->prefixe_valide = $result['prefixe'];
-            return $result['client'];
-        }
-        return null;
-    }
-
-    /**
      * Vérifier si un préfixe est autorisé
-     * @param string $prefixe
-     * @return bool
      */
     public function isPrefixeAutorise($prefixe)
     {
-        $prefixeModel = model('PrefixeModel');
+        $prefixeModel = new \App\Models\PrefixModel();
         return $prefixeModel->prefixeExists($prefixe);
     }
 
     /**
      * Nettoyer un numéro de téléphone
-     * @param string $numero
-     * @return string
      */
     private function nettoyerNumero($numero)
     {
-        // Enlever les espaces, tirets, points, etc.
         $numero = preg_replace('/[\s\-\.\(\)]/', '', $numero);
         
-        // Si le numéro commence par 0, on le garde
         if (strpos($numero, '0') === 0) {
             return $numero;
         }
         
-        // Si le numéro commence par +261, on le convertit en 0
         if (strpos($numero, '+261') === 0) {
             return '0' . substr($numero, 4);
         }
         
-        // Si le numéro commence par 261, on le convertit en 0
         if (strpos($numero, '261') === 0) {
             return '0' . substr($numero, 3);
         }
@@ -154,9 +168,6 @@ class ClientModel extends Model
 
     /**
      * Formater un numéro de téléphone
-     * @param string $numero
-     * @param string $format 'standard' (032 56 100 52) ou 'international' (+261 32 56 100 52)
-     * @return string
      */
     public function formaterNumero($numero, $format = 'standard')
     {
@@ -170,7 +181,6 @@ class ClientModel extends Model
                    substr($numero, 9, 2);
         }
         
-        // Format standard
         return substr($numero, 0, 3) . ' ' . 
                substr($numero, 3, 2) . ' ' . 
                substr($numero, 5, 2) . ' ' . 
@@ -180,8 +190,6 @@ class ClientModel extends Model
 
     /**
      * Valider le format d'un numéro de téléphone
-     * @param string $numero
-     * @return bool
      */
     public function validerFormatNumero($numero)
     {

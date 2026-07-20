@@ -18,20 +18,20 @@ class LoginController extends BaseController
 
     public function login()
     {
-        $clientModel = model('ClientModel');
+        $clientModel = new ClientModel();
         
         $numero = $this->request->getPost('numero');
         
         if (empty($numero)) {
             return redirect()->back()->with('error', 'Veuillez saisir votre numéro de téléphone');
         }
-    
+
         $verification = $clientModel->verifierNumeroClient($numero);
         
         if (!$verification['valid']) {
             return redirect()->back()->with('error', $verification['message']);
         }
-    
+
         $session = session();
         $session->set([
             'client_id' => $verification['client_id'],
@@ -39,9 +39,10 @@ class LoginController extends BaseController
             'client_numero' => $verification['client_numero'],
             'logged_in' => true
         ]);
-    
+
         return redirect()->to('/Client')->with('success', 'Connexion réussie');
     }
+
     public function logout()
     {
         $session = session();

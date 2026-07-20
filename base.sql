@@ -48,7 +48,7 @@ CREATE TABLE transactions (
 
 -- 1. Insertion des préfixes téléphoniques
 INSERT INTO prefixes (prefixe) VALUES 
-('032'), -- Exemple Opérateur A
+('031'), -- Exemple Opérateur A
 ('033'), -- Exemple Opérateur B
 ('034'), -- Exemple Opérateur C
 ('036');    -- International / Autre
@@ -62,10 +62,10 @@ INSERT INTO types_operations (nom) VALUES
 -- 3. Insertion des clients de test
 -- (Associez bien les numéros aux préfixes logiques pour le réalisme)
 INSERT INTO clients (nom, numero, prefixe_id) VALUES 
-('Jean Dupont', '0321122334', 1),
+('Jean Dupont', '0311122334', 1),
 ('Alice Ranoro', '0345566778', 3),
 ('Marc Smith', '0339988776', 2),
-('Fanja Rakoto', '0324455667', 1);
+('Fanja Rakoto', '0314455667', 1);
 
 -- 4. Création des comptes (Liés aux clients par client_id)
 -- Note : Les soldes sont ici au format NUMERIC. Si vous passez en centimes plus tard, multipliez par 100.

@@ -14,7 +14,7 @@
             <?= session()->getFlashdata('success') ?>
     <?php endif; ?>
 
-    <form action="/login" method="POST">
+    <form action="/login/authenticate" method="POST">
         <?= csrf_field() ?>
         
         <label for="numero">Numéro de téléphone :</label>

@@ -1,90 +1,64 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Models;
 
-use App\Models\PrefixModel;
+use CodeIgniter\Model;
 
-class PrefixController extends BaseController
+class PrefixModel extends Model
 {
-    public function index(): string
+    protected $table            = 'prefixes';
+    protected $primaryKey       = 'id';
+    protected $useAutoIncrement = true;
+    protected $returnType       = 'array';
+    protected $useSoftDeletes   = false;
+
+    protected $allowedFields    = ['prefixe'];
+    protected $useTimestamps = false;
+
+    protected $validationRules      = [
+        'prefixe' => 'required|is_unique[prefixes.prefixe]|min_length[2]|max_length[10]',
+    ];
+    protected $validationMessages   = [
+        'prefixe' => [
+            'required'  => 'Le préfixe est obligatoire.',
+            'is_unique' => 'Ce préfixe existe déjà dans la base de données.',
+        ],
+    ];
+    protected $skipValidation       = false;
+
+    public function getPrefixById(int $id)
     {
-        $prefixModel = new PrefixModel();
-        $data = $prefixModel->findAll();
-        return view("prefix/index", ['prefixes' => $data]);
+        return $this->find($id);
     }
 
-    public function form()
+    public function getAllPrefixes()
     {
-        return view("prefix/form");
+        return $this->findAll();
     }
 
-    public function create()
+    public function addPrefix(string $prefix)
     {
-        // Sécurité : On vérifie que c'est bien une requête POST
-        if (!$this->request->is('post')) {
-            return redirect()->to('/prefix/form');
-        }
+        return $this->insert(['prefixe' => $prefix]);
+    }   
 
-        $prefixModel = new PrefixModel();
-        $data = [
-            'prefixe' => $this->request->getPost('prefixe')
-        ];
-
-        // insert() renvoie l'ID généré ou false en cas d'échec de validation
-        if ($prefixModel->insert($data) !== false) {
-            return redirect()->to('/prefix')->with('success', 'Préfixe créé avec succès.');
-        }
-
-        // Si l'insertion échoue (ex: doublon), on recharge le formulaire en renvoyant les erreurs
-        return view("prefix/form", [
-            'errors' => $prefixModel->errors(),
-            'old'    => $data // Permet de réafficher ce que l'utilisateur avait tapé
-        ]);
+    public function updatePrefix(int $id, string $prefix)
+    {
+        return $this->update($id, ['prefixe' => $prefix]);
     }
 
-    public function edit($id)
+    public function deletePrefix(int $id)
     {
-        $prefixModel = new PrefixModel();
-        $prefix = $prefixModel->find($id);
-        
-        if (!$prefix) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException("Préfixe non trouvé : " . $id);
-        }
-        
-        return view("prefix/edit", ['prefix' => $prefix]);
-    }
-    
-    public function update($id)
-    {
-        $prefixModel = new PrefixModel();
-
-        if ($this->request->is('post')) {
-            $data = [
-                'prefixe' => $this->request->getPost('prefixe')
-            ];
-
-            if ($prefixModel->update($id, $data)) {
-                return redirect()->to('/prefix')->with('success', 'Préfixe mis à jour.');
-            }
-
-            // En cas d'erreur lors de la modification (ex: le préfixe existe déjà ailleurs)
-            return view("prefix/edit", [
-                'prefix' => $prefixModel->find($id),
-                'errors' => $prefixModel->errors()
-            ]);
-        }
-        
-        return redirect()->to('/prefix/edit/' . $id);
+        return $this->delete($id);
     }
 
-    public function delete($id)
+    public function findByPrefixe(string $prefixe)
     {
-        $prefixModel = new PrefixModel();
-        
-        if ($prefixModel->find($id) && $prefixModel->delete($id)) {
-            return redirect()->to('/prefix')->with('success', 'Préfixe supprimé.');
-        }
-        
-        throw new \CodeIgniter\Exceptions\PageNotFoundException("Erreur lors de la suppression du préfixe : " . $id);
+        return $this->where('prefixe', $prefixe)->first();
+    }
+
+    // ✅ Méthode manquante ajoutée
+    public function prefixeExists(string $prefixe)
+    {
+        return $this->where('prefixe', $prefixe)->countAllResults() > 0;
     }
 }

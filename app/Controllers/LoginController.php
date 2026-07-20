@@ -6,6 +6,9 @@ use App\Models\ClientModel;
 
 class LoginController extends BaseController
 {
+    public function aller(){
+        return view("index");
+    }
     public function index(): string
     {
         $session = session();

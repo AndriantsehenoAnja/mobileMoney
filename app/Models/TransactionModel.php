@@ -27,6 +27,79 @@ class TransactionModel extends Model
      * Calcule le gain réel généré par type d'opération (retrait, transfert, etc.)
      * en faisant la somme des frais perçus sur les transactions passées.
      */
+
+/**
+ * Calcule les frais et commissions par opérateur avec filtrage par période.
+ */
+    public function getGainsParOperateur(?string $dateDebut = null, ?string $dateFin = null): array
+    {
+        // --- 1. Gains sur notre propre réseau (Opérations internes) ---
+        $builderInterne = $this->db->table('transactions t')
+            ->select('SUM(t.frais) as total_frais, COUNT(t.id) as nombre_transactions')
+            ->where('t.est_inter_operateur', 0);
+
+        if (!empty($dateDebut)) {
+            $builderInterne->where('t.date_transaction >=', $dateDebut . ' 00:00:00');
+        }
+        if (!empty($dateFin)) {
+            $builderInterne->where('t.date_transaction <=', $dateFin . ' 23:59:59');
+        }
+
+        $resInterne = $builderInterne->get()->getRowArray();
+        $fraisInterne = (float)($resInterne['total_frais'] ?? 0);
+        $countInterne = (int)($resInterne['nombre_transactions'] ?? 0);
+
+        // --- 2. Gains sur les réseaux externes (Inter-opérateurs) ---
+        $builderExterne = $this->db->table('transactions t')
+            ->select('
+                op.id as operateur_id,
+                op.nom as operateur_nom,
+                COUNT(t.id) as nombre_transactions,
+                SUM(t.frais) as total_frais,
+                SUM(t.commission_inter_operateur) as total_commission
+            ')
+            ->join('operateurs op', 'op.id = t.operateur_destination_id', 'left')
+            ->where('t.est_inter_operateur', 1)
+            ->groupBy('t.operateur_destination_id, op.id, op.nom');
+
+        if (!empty($dateDebut)) {
+            $builderExterne->where('t.date_transaction >=', $dateDebut . ' 00:00:00');
+        }
+        if (!empty($dateFin)) {
+            $builderExterne->where('t.date_transaction <=', $dateFin . ' 23:59:59');
+        }
+
+        $resExternes = $builderExterne->get()->getResultArray();
+
+        // Calcul des totaux externes
+        $totalFraisExterne = 0;
+        $totalCommissionExterne = 0;
+        $totalCountExterne = 0;
+
+        foreach ($resExternes as $ext) {
+            $totalFraisExterne      += (float)$ext['total_frais'];
+            $totalCommissionExterne += (float)$ext['total_commission'];
+            $totalCountExterne      += (int)$ext['nombre_transactions'];
+        }
+
+        return [
+            'interne' => [
+                'nombre_transactions' => $countInterne,
+                'frais'               => $fraisInterne,
+                'total_gain'          => $fraisInterne
+            ],
+            'externes' => $resExternes,
+            'totaux'   => [
+                'frais_interne'            => $fraisInterne,
+                'frais_externe'            => $totalFraisExterne,
+                'commission_externe'       => $totalCommissionExterne,
+                'total_frais_global'       => $fraisInterne + $totalFraisExterne,
+                'total_commission_global'  => $totalCommissionExterne,
+                'gain_net_global'          => $fraisInterne + $totalFraisExterne + $totalCommissionExterne,
+                'total_transactions'       => $countInterne + $totalCountExterne
+            ]
+        ];
+    }
     public function getGainTotalParType()
     {
         return $this->select('types_operations.nom as type_operation, SUM(transactions.frais) as total_gain')

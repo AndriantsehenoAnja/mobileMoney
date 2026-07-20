@@ -33,19 +33,16 @@ Commun|00h00|Création du TAG v1 + mise à jour Taches.md|Git + Taches.md
 
 - [ ] Ajouter table `operateurs`
 - [ ] Ajouter table `prefixesOperateurExterne`
-- [ ] Ajouter table `redevances_operateurs`
 - [ ] Ajouter table `groupes_transferts`
-- [ ] Modifier table `clients` (ajout `prefixe_operateur_externe_id`)
 - [ ] Modifier table `transactions` (ajout champs V2)
 - [ ] Ajouter données de test
 
 #### 2. Créer les modèles
 **Fichiers :** `app/Models/`
 
-- [ ] Créer `OperateurModel.php`
-- [ ] Créer `PrefixeExterneModel.php`
-- [ ] Créer `RedevanceModel.php`
-- [ ] Créer `GroupeTransfertModel.php`
+- [ x] Créer `OperateurModel.php`
+- [x ] Créer `PrefixeExterneModel.php`
+- [x ] Créer `GroupeTransfertModel.php`
 
 #### 3. Gestion des opérateurs externes (CRUD)
 **Fichiers :** `AdminController.php`, `app/Views/admin/operateurs/`
@@ -106,10 +103,6 @@ $routes->group('admin', function($routes) {
     $routes->get('prefixes-externes/add', 'AdminController::prefixeExterneAdd');
     $routes->post('prefixes-externes/create', 'AdminController::prefixeExterneCreate');
     $routes->get('prefixes-externes/delete/(:num)', 'AdminController::prefixeExterneDelete/$1');
-    
-    // Redevances
-    $routes->get('redevances', 'AdminController::redevances');
-    $routes->get('redevances/payer/(:num)', 'AdminController::redevanceMarquerPaye/$1');
     
     // Gains par opérateur
     $routes->get('gains-operateurs', 'SituationCompteController::gainsParOperateur');

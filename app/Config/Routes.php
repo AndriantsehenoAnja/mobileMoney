@@ -9,7 +9,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'LoginController::index');
 $routes->get('login', 'LoginController::index');
 $routes->post('login/authenticate', 'LoginController::login');
-$routes->get('/logout','ClientController::logout');
+$routes->get('/logout','LoginController::logout');
 
 $routes->get('/Client', 'ClientController::index', ['filter' => 'auth']);
 // Dépôt

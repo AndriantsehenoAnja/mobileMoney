@@ -1,65 +1,49 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'Transfert - Mobile Money' ?></title>
-</head>
-<body>
-    <div class="container">
-        <h1> Effectuer un transfert</h1>
-        
-        <!-- Messages Flash -->
-        <?php if(session()->getFlashdata('error')): ?>
-            <div class="alert alert-error">❌ <?= session()->getFlashdata('error') ?></div>
-        <?php endif; ?>
+<?= $this->extend('layout/main') ?>
 
-        <?php if(session()->getFlashdata('success')): ?>
-            <div class="alert alert-success">✅ <?= session()->getFlashdata('success') ?></div>
-        <?php endif; ?>
-        
-        <!-- Solde -->
-        <div class="info-solde">
-            <div class="label"> Solde disponible</div>
-            <div class="solde"><?= number_format($solde ?? 0, 2) ?> Ar</div>
-            <div class="votre-numero"> Votre numéro : <?= $client->numero ?? '' ?></div>
+<?= $this->section('content') ?>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">
+        <i class="fas fa-exchange-alt text-primary"></i> Effectuer un transfert
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <strong>💰 Solde disponible :</strong> <?= number_format($solde ?? 0, 2) ?> Ar
+            <br>
+            <strong>📱 Votre numéro :</strong> <?= $client->numero ?? '' ?>
+        </div>
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle"></i> Des frais peuvent s'appliquer selon le montant
         </div>
 
-        <!-- Formulaire -->
         <form action="/transfert/effectuer" method="POST" id="transfertForm">
             <?= csrf_field() ?>
             
-            <!-- Numéro du destinataire -->
             <div class="form-group">
-                <label for="numero_destinataire"> Numéro du destinataire</label>
+                <label for="numero_destinataire"><i class="fas fa-phone"></i> Numéro du destinataire</label>
                 <input type="text" 
+                       class="form-control" 
                        id="numero_destinataire" 
                        name="numero_destinataire" 
                        placeholder="0325610052" 
                        maxlength="10"
-                       pattern="[0-9]{10}"
                        value="<?= old('numero_destinataire') ?>"
                        required>
-                <small>Entrez le numéro à 10 chiffres du destinataire</small>
+                <div class="form-text">Entrez le numéro à 10 chiffres du destinataire</div>
                 
-                <!-- Message de chargement -->
-                <div id="loadingMessage" class="loading"> Vérification du destinataire...</div>
-                
-                <!-- Info destinataire trouvé -->
-                <div id="infoDestinataire" class="info-destinataire">
+                <div id="loadingMessage" style="color: #3498db; display: none;">⏳ Vérification du destinataire...</div>
+                <div id="infoDestinataire" style="background: #e8f5e9; padding: 10px; border-left: 4px solid #27ae60; margin: 10px 0; display: none;">
                     ✅ Destinataire : <strong id="nomDestinataire"></strong> (<span id="numeroDestinataire"></span>)
                 </div>
-                
-                <!-- Erreur destinataire -->
-                <div id="errorDestinataire" class="error-destinataire">
+                <div id="errorDestinataire" style="background: #fde8e8; padding: 10px; border-left: 4px solid #e74c3c; margin: 10px 0; display: none; color: #c0392b;">
                     ❌ <span id="messageErreur"></span>
                 </div>
             </div>
 
-            <!-- Montant -->
             <div class="form-group">
-                <label for="montant"> Montant à transférer</label>
+                <label for="montant"><i class="fas fa-coins"></i> Montant à transférer</label>
                 <input type="number" 
+                       class="form-control form-control-lg" 
                        id="montant" 
                        name="montant" 
                        placeholder="Ex: 5000" 
@@ -67,157 +51,116 @@
                        step="100"
                        value="<?= old('montant') ?>"
                        required>
-                <small>Montant minimum : 100 Ar</small>
-                <br>
-                <small style="color: #888;">⚠️ Des frais peuvent s'appliquer selon le montant</small>
+                <div class="form-text">Montant minimum : 100 Ar</div>
             </div>
 
-            <!-- Boutons rapides -->
-            <div class="btn-group">
-                <button type="button" onclick="setMontant(500)">500 Ar</button>
-                <button type="button" onclick="setMontant(1000)">1 000 Ar</button>
-                <button type="button" onclick="setMontant(5000)">5 000 Ar</button>
-                <button type="button" onclick="setMontant(10000)">10 000 Ar</button>
-                <button type="button" onclick="setMontant(25000)">25 000 Ar</button>
-                <button type="button" onclick="setMontant(50000)">50 000 Ar</button>
+            <div class="quick-amounts">
+                <button type="button" class="quick-amount-btn" onclick="setMontant(500)">500 Ar</button>
+                <button type="button" class="quick-amount-btn" onclick="setMontant(1000)">1 000 Ar</button>
+                <button type="button" class="quick-amount-btn" onclick="setMontant(5000)">5 000 Ar</button>
+                <button type="button" class="quick-amount-btn" onclick="setMontant(10000)">10 000 Ar</button>
+                <button type="button" class="quick-amount-btn" onclick="setMontant(25000)">25 000 Ar</button>
+                <button type="button" class="quick-amount-btn" onclick="setMontant(50000)">50 000 Ar</button>
             </div>
 
-            <button type="submit" class="btn-submit" id="transfertBtn">Effectuer le transfert</button>
+            <button type="submit" class="btn btn-primary btn-block" id="transfertBtn">
+                <i class="fas fa-exchange-alt"></i> Effectuer le transfert
+            </button>
         </form>
-
-        <a href="/client" class="back-link">← Retour au dashboard</a>
     </div>
+</div>
 
-    <script>
-        // Éléments DOM
-        const numeroInput = document.getElementById('numero_destinataire');
-        const montantInput = document.getElementById('montant');
-        const transfertBtn = document.getElementById('transfertBtn');
-        const infoDestinataire = document.getElementById('infoDestinataire');
-        const errorDestinataire = document.getElementById('errorDestinataire');
-        const loadingMessage = document.getElementById('loadingMessage');
-        const nomDestinataire = document.getElementById('nomDestinataire');
-        const numeroDestinataire = document.getElementById('numeroDestinataire');
-        const messageErreur = document.getElementById('messageErreur');
+<script>
+    const numeroInput = document.getElementById('numero_destinataire');
+    let timeoutId = null;
+    let destinataireValide = false;
 
-        let timeoutId = null;
-        let destinataireValide = false;
+    function setMontant(montant) {
+        document.getElementById('montant').value = montant;
+    }
 
-        function setMontant(montant) {
-            document.getElementById('montant').value = montant;
-        }
-
-        // Vérification du destinataire avec délai (debounce)
-        numeroInput.addEventListener('input', function() {
-            const numero = this.value.replace(/\D/g, '');
-            this.value = numero;
-            
-            // Cacher les messages précédents
-            infoDestinataire.classList.remove('visible');
-            errorDestinataire.classList.remove('visible');
-            loadingMessage.classList.remove('visible');
-            destinataireValide = false;
-            
-            // Annuler la vérification précédente
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
-            
-            // Vérifier seulement si 10 chiffres
-            if (numero.length === 10) {
-                timeoutId = setTimeout(function() {
-                    verifierDestinataire(numero);
-                }, 300);
-            }
-        });
-
-        function verifierDestinataire(numero) {
-            // ✅ Utiliser le bon chemin
-            const url = '/verifier-destinataire?numero=' + encodeURIComponent(numero);
-            
-            console.log('🔍 Vérification du destinataire:', url);
-            
-            loadingMessage.classList.add('visible');
-            
-            fetch(url)
-                .then(function(response) {
-                    console.log(' Réponse reçue, status:', response.status);
-                    return response.json();
-                })
-                .then(function(data) {
-                    loadingMessage.classList.remove('visible');
-                    
-                    console.log(' Données reçues:', data);
-                    
-                    if (data.success) {
-                        nomDestinataire.textContent = data.client.nom;
-                        numeroDestinataire.textContent = data.client.numero;
-                        infoDestinataire.classList.add('visible');
-                        errorDestinataire.classList.remove('visible');
-                        destinataireValide = true;
-                    } else {
-                        messageErreur.textContent = data.message;
-                        errorDestinataire.classList.add('visible');
-                        infoDestinataire.classList.remove('visible');
-                        destinataireValide = false;
-                    }
-                })
-                .catch(function(error) {
-                    loadingMessage.classList.remove('visible');
-                    console.error('❌ Erreur AJAX:', error);
-                    messageErreur.textContent = 'Erreur de connexion au serveur';
-                    errorDestinataire.classList.add('visible');
-                    infoDestinataire.classList.remove('visible');
-                    destinataireValide = false;
-                });
-        }
-
-        // Validation avant soumission
-        document.getElementById('transfertForm').addEventListener('submit', function(e) {
-            const numero = document.getElementById('numero_destinataire').value;
-            const montant = parseFloat(document.getElementById('montant').value);
-            const solde = <?= $solde ?? 0 ?>;
-            
-            if (numero.length !== 10) {
-                e.preventDefault();
-                alert('❌ Veuillez saisir un numéro de destinataire valide (10 chiffres)');
-                return false;
-            }
-            
-            if (!destinataireValide) {
-                e.preventDefault();
-                alert('❌ Destinataire non valide. Veuillez vérifier le numéro.');
-                return false;
-            }
-            
-            if (isNaN(montant) || montant < 100) {
-                e.preventDefault();
-                alert('❌ Veuillez saisir un montant valide (minimum 100 Ar)');
-                return false;
-            }
-            
-            if (montant > solde) {
-                e.preventDefault();
-                alert('❌ Solde insuffisant. Solde disponible : ' + solde.toLocaleString() + ' Ar');
-                return false;
-            }
-            
-            if (!confirm(`Confirmer le transfert de ${montant.toLocaleString()} Ar vers le numéro ${numero} ?`)) {
-                e.preventDefault();
-                return false;
-            }
-            
-            transfertBtn.disabled = true;
-            transfertBtn.textContent = 'Traitement en cours...';
-        });
-
-        // Forcer la vérification si le numéro est déjà saisi au chargement
-        window.addEventListener('load', function() {
-            const numero = numeroInput.value.replace(/\D/g, '');
-            if (numero.length === 10) {
+    numeroInput.addEventListener('input', function() {
+        const numero = this.value.replace(/\D/g, '');
+        this.value = numero;
+        
+        document.getElementById('infoDestinataire').style.display = 'none';
+        document.getElementById('errorDestinataire').style.display = 'none';
+        document.getElementById('loadingMessage').style.display = 'none';
+        destinataireValide = false;
+        
+        if (timeoutId) clearTimeout(timeoutId);
+        
+        if (numero.length === 10) {
+            timeoutId = setTimeout(function() {
                 verifierDestinataire(numero);
-            }
-        });
-    </script>
-</body>
-</html>
+            }, 300);
+        }
+    });
+
+    function verifierDestinataire(numero) {
+        document.getElementById('loadingMessage').style.display = 'block';
+        
+        fetch('/verifier-destinataire?numero=' + encodeURIComponent(numero))
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loadingMessage').style.display = 'none';
+                
+                if (data.success) {
+                    document.getElementById('nomDestinataire').textContent = data.client.nom;
+                    document.getElementById('numeroDestinataire').textContent = data.client.numero;
+                    document.getElementById('infoDestinataire').style.display = 'block';
+                    destinataireValide = true;
+                } else {
+                    document.getElementById('messageErreur').textContent = data.message;
+                    document.getElementById('errorDestinataire').style.display = 'block';
+                    destinataireValide = false;
+                }
+            })
+            .catch(error => {
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('messageErreur').textContent = 'Erreur de connexion';
+                document.getElementById('errorDestinataire').style.display = 'block';
+                destinataireValide = false;
+            });
+    }
+
+    document.getElementById('transfertForm').addEventListener('submit', function(e) {
+        const numero = document.getElementById('numero_destinataire').value;
+        const montant = parseFloat(document.getElementById('montant').value);
+        const solde = <?= $solde ?? 0 ?>;
+        
+        if (numero.length !== 10) {
+            e.preventDefault();
+            alert('❌ Veuillez saisir un numéro de destinataire valide (10 chiffres)');
+            return false;
+        }
+        
+        if (!destinataireValide) {
+            e.preventDefault();
+            alert('❌ Destinataire non valide. Veuillez vérifier le numéro.');
+            return false;
+        }
+        
+        if (isNaN(montant) || montant < 100) {
+            e.preventDefault();
+            alert('❌ Veuillez saisir un montant valide (minimum 100 Ar)');
+            return false;
+        }
+        
+        if (montant > solde) {
+            e.preventDefault();
+            alert('❌ Solde insuffisant. Solde disponible : ' + solde.toLocaleString() + ' Ar');
+            return false;
+        }
+        
+        if (!confirm(`Confirmer le transfert de ${montant.toLocaleString()} Ar vers le numéro ${numero} ?`)) {
+            e.preventDefault();
+            return false;
+        }
+        
+        document.getElementById('transfertBtn').disabled = true;
+        document.getElementById('transfertBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement en cours...';
+    });
+</script>
+
+<?= $this->endSection() ?>

@@ -1,20 +1,99 @@
 <?php
 
 namespace App\Controllers;
+
 use App\Models\ClientModel;
 use App\Models\CompteModel;
 use App\Models\TransactionModel;
 use App\Models\TypeOperationModel;
 use App\Models\BaremeFraisModel;
+
 class ClientController extends BaseController
 {
-    public function index(): string
+    /**
+     * Dashboard client
+     */
+    public function index()
     {
-    $compte = new CompteModel();
-    $solde = $compte->getSolde(session()->get('client_id'));
-        return view('/Client/index', ['solde' => $solde]);
+        $session = session();
+        
+        if (!$session->get('logged_in')) {
+            return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
+        }
+        
+        $clientId = $session->get('client_id');
+        
+        $clientModel = new ClientModel();
+        $compteModel = new CompteModel();
+        $transactionModel = new TransactionModel();
+        
+        $client = $clientModel->find($clientId);
+        $compte = $compteModel->findByClientId($clientId);
+        
+        $transactions = [];
+        if ($compte) {
+            $transactions = $transactionModel
+                ->select('transactions.*, types_operations.nom as type_operation')
+                ->join('types_operations', 'types_operations.id = transactions.type_operation_id', 'left')
+                ->where('transactions.compte_source', $compte->id)
+                ->orWhere('transactions.compte_destination', $compte->id)
+                ->orderBy('transactions.date_transaction', 'DESC')
+                ->limit(5)
+                ->findAll();
+        }
+        
+        $totalDepots = 0;
+        $totalRetraits = 0;
+        $totalTransferts = 0;
+        $totalFrais = 0;
+        $totalTransactions = 0;
+        
+        if ($compte) {
+            $totalTransactions = $transactionModel
+                ->where('compte_source', $compte->id)
+                ->orWhere('compte_destination', $compte->id)
+                ->countAllResults();
+            
+            $allTransactions = $transactionModel
+                ->select('transactions.*, types_operations.nom as type_operation')
+                ->join('types_operations', 'types_operations.id = transactions.type_operation_id', 'left')
+                ->where('transactions.compte_source', $compte->id)
+                ->orWhere('transactions.compte_destination', $compte->id)
+                ->findAll();
+            
+            foreach ($allTransactions as $tx) {
+                $totalFrais += $tx->frais ?? 0;
+                if (strtolower($tx->type_operation ?? '') == 'depot') {
+                    $totalDepots += $tx->montant;
+                } elseif (strtolower($tx->type_operation ?? '') == 'retrait') {
+                    $totalRetraits += $tx->montant;
+                } elseif (strtolower($tx->type_operation ?? '') == 'transfert') {
+                    $totalTransferts += $tx->montant;
+                }
+            }
+        }
+        
+        $data = [
+            'title' => 'Mon Compte - Mobile Money',
+            'page_title' => 'Dashboard',
+            'current_page' => 'dashboard',
+            'client' => $client,
+            'compte' => $compte,
+            'transactions' => $transactions,
+            'solde' => $compte ? $compte->solde : 0,
+            'total_transactions' => $totalTransactions,
+            'total_depots' => $totalDepots,
+            'total_retraits' => $totalRetraits,
+            'total_transferts' => $totalTransferts,
+            'total_frais' => $totalFrais
+        ];
+        
+        return view('Client/index', $data);
     }
-// Depots
+
+    /**
+     * Formulaire de dépôt
+     */
     public function depot()
     {
         $session = session();
@@ -25,81 +104,89 @@ class ClientController extends BaseController
         
         $clientId = $session->get('client_id');
         $compteModel = new CompteModel();
+        $clientModel = new ClientModel();
+        
         $compte = $compteModel->findByClientId($clientId);
-        $solde = $compteModel->getSolde(session()->get('client_id'));
+        $client = $clientModel->find($clientId);
+        
         $data = [
             'title' => 'Dépôt - Mobile Money',
-            'solde' => $solde,
-            'compte' => $compte
+            'page_title' => 'Dépôt',
+            'current_page' => 'depot',
+            'solde' => $compte ? $compte->solde : 0,
+            'compte' => $compte,
+            'client' => $client
         ];
         
         return view('Client/depot', $data);
-    
     }
 
+    /**
+     * Traiter le dépôt
+     */
     public function effectuerDepot()
-{
-    $session = session();
-    
-    if (!$session->get('logged_in')) {
-        return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
-    }
-    
-    $clientId = $session->get('client_id');
-    
-    $montant = $this->request->getPost('montant');
-    
-    if (empty($montant) || !is_numeric($montant) || $montant <= 0) {
-        return redirect()->back()->with('error', 'Veuillez saisir un montant valide');
-    }
-    
-    $montant = (float) $montant;
-    
-    if ($montant < 100) {
-        return redirect()->back()->with('error', 'Le montant minimum de dépôt est de 100 Ar');
-    }
-    
-    $compteModel = new CompteModel();
-    $transactionModel = new TransactionModel();
-    $typeOperationModel = new TypeOperationModel();
-    
-    $compte = $compteModel->findByClientId($clientId);
-    
-    if (!$compte) {
-        return redirect()->back()->with('error', 'Compte non trouvé');
-    }
-    
-    $typeDepot = $typeOperationModel->where('nom', 'Depot')->first();
-    
-    if (!$typeDepot) {
-        return redirect()->back()->with('error', 'Type d\'opération non configuré');
-    }
-    
-    $db = \Config\Database::connect();
-    $db->transStart();
-    
-    // Créditer le compte
-    $compteModel->crediter($compte->id, $montant);
-    
-    $transactionModel->insert([
-        'type_operation_id' => $typeDepot['id'],  
-        'compte_source' => null,
-        'compte_destination' => $compte->id,
-        'montant' => $montant,
-        'frais' => 0
-    ]);
-    
-    $db->transComplete();
-    
-    if ($db->transStatus() === false) {
-        $db->transRollback();
-        return redirect()->back()->with('error', 'Erreur lors du dépôt');
-    }
-    
-    return redirect()->to('/Client')->with('success', 'Dépôt de ' . number_format($montant, 2) . ' Ar effectué avec succès');
+    {
+        $session = session();
+        
+        if (!$session->get('logged_in')) {
+            return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
+        }
+        
+        $clientId = $session->get('client_id');
+        $montant = $this->request->getPost('montant');
+        
+        if (empty($montant) || !is_numeric($montant) || $montant <= 0) {
+            return redirect()->back()->with('error', 'Veuillez saisir un montant valide');
+        }
+        
+        $montant = (float) $montant;
+        
+        if ($montant < 100) {
+            return redirect()->back()->with('error', 'Le montant minimum de dépôt est de 100 Ar');
+        }
+        
+        $compteModel = new CompteModel();
+        $transactionModel = new TransactionModel();
+        $typeOperationModel = new TypeOperationModel();
+        
+        $compte = $compteModel->findByClientId($clientId);
+        
+        if (!$compte) {
+            return redirect()->back()->with('error', 'Compte non trouvé');
+        }
+        
+        $typeDepot = $typeOperationModel->where('nom', 'Depot')->first();
+        
+        if (!$typeDepot) {
+            return redirect()->back()->with('error', 'Type d\'opération non configuré');
+        }
+        
+        $db = \Config\Database::connect();
+        $db->transStart();
+        
+        $compteModel->crediter($compte->id, $montant);
+        
+        $transactionModel->insert([
+            'type_operation_id' => $typeDepot['id'],
+            'compte_source' => null,
+            'compte_destination' => $compte->id,
+            'montant' => $montant,
+            'frais' => 0
+        ]);
+        
+        $db->transComplete();
+        
+        if ($db->transStatus() === false) {
+            $db->transRollback();
+            return redirect()->back()->with('error', 'Erreur lors du dépôt');
+        }
+        
+        return redirect()->to('/Client')->with('success', 'Dépôt de ' . number_format($montant, 2) . ' Ar effectué avec succès');
     }
 
-// Retraits
+    /**
+     * Formulaire de retrait
+     */
     public function retrait()
     {
         $session = session();
@@ -110,19 +197,27 @@ class ClientController extends BaseController
         
         $clientId = $session->get('client_id');
         $compteModel = new CompteModel();
+        $clientModel = new ClientModel();
+        
         $compte = $compteModel->findByClientId($clientId);
-        $solde = $compteModel->getSolde(session()->get('client_id'));
+        $client = $clientModel->find($clientId);
         
         $data = [
             'title' => 'Retrait - Mobile Money',
-            'solde' => $solde,
-            'compte' => $compte
+            'page_title' => 'Retrait',
+            'current_page' => 'retrait',
+            'solde' => $compte ? $compte->solde : 0,
+            'compte' => $compte,
+            'client' => $client
         ];
         
         return view('Client/retrait', $data);
     }
 
-        public function effectuerRetrait()
+    /**
+     * Traiter le retrait
+     */
+    public function effectuerRetrait()
     {
         $session = session();
         
@@ -131,7 +226,6 @@ class ClientController extends BaseController
         }
         
         $clientId = $session->get('client_id');
-        
         $montant = $this->request->getPost('montant');
         
         if (empty($montant) || !is_numeric($montant) || $montant <= 0) {
@@ -196,9 +290,10 @@ class ClientController extends BaseController
         return redirect()->to('/Client')->with('success', $message);
     }
 
-// Transfert
-
-public function transfert()
+    /**
+     * Formulaire de transfert
+     */
+    public function transfert()
     {
         $session = session();
         
@@ -215,7 +310,8 @@ public function transfert()
         
         $data = [
             'title' => 'Transfert - Mobile Money',
-            // ✅ Utiliser -> au lieu de []
+            'page_title' => 'Transfert',
+            'current_page' => 'transfert',
             'solde' => $compte ? $compte->solde : 0,
             'compte' => $compte,
             'client' => $client
@@ -327,7 +423,6 @@ public function transfert()
         $typeOperationModel = new TypeOperationModel();
         $baremeFraisModel = new BaremeFraisModel();
         
-        // Récupérer le compte source (c'est un objet)
         $compteSource = $compteModel->findByClientId($clientId);
         
         if (!$compteSource) {
@@ -352,11 +447,9 @@ public function transfert()
             return redirect()->back()->with('error', 'Type d\'opération non configuré');
         }
         
-        // ✅ Utiliser -> au lieu de [] pour les objets
         $frais = $baremeFraisModel->calculerFrais($typeTransfert['id'], $montant);
         $montantTotal = $montant + $frais;
         
-        // ✅ Utiliser -> au lieu de [] pour les objets
         if ($compteSource->solde < $montantTotal) {
             return redirect()->back()->with('error', 'Solde insuffisant. Solde disponible : ' . number_format($compteSource->solde, 2) . ' Ar');
         }
@@ -365,7 +458,6 @@ public function transfert()
         $db->transStart();
         
         try {
-            // ✅ Utiliser -> au lieu de [] pour les objets
             $compteModel->debiter($compteSource->id, $montantTotal);
             $compteModel->crediter($compteDestination->id, $montant);
             
@@ -396,79 +488,109 @@ public function transfert()
         }
     }
 
-// Historique
-/**
- * Afficher l'historique des transactions avec Query Builder
- */
-public function historique()
-{
-    $session = session();
-    
-    if (!$session->get('logged_in')) {
-        return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
-    }
-    
-    $clientId = $session->get('client_id');
-    
-    $compteModel = new CompteModel();
-    $transactionModel = new TransactionModel();
-    
-    // Récupérer le compte du client
-    $compte = $compteModel->findByClientId($clientId);
-    
-    if (!$compte) {
-        return redirect()->back()->with('error', 'Compte non trouvé');
-    }
-    
-    // Récupérer les transactions avec Query Builder
-    $transactions = $transactionModel
-        ->select('transactions.*, 
-                  types_operations.nom as type_operation,
-                  cl1.numero as numero_source,
-                  cl1.nom as nom_source,
-                  cl2.numero as numero_destination,
-                  cl2.nom as nom_destination')
-        ->join('types_operations', 'types_operations.id = transactions.type_operation_id', 'left')
-        ->join('comptes c1', 'c1.id = transactions.compte_source', 'left')
-        ->join('clients cl1', 'cl1.id = c1.client_id', 'left')
-        ->join('comptes c2', 'c2.id = transactions.compte_destination', 'left')
-        ->join('clients cl2', 'cl2.id = c2.client_id', 'left')
-        ->where('transactions.compte_source', $compte->id)
-        ->orWhere('transactions.compte_destination', $compte->id)
-        ->orderBy('transactions.date_transaction', 'DESC')
-        ->findAll();
-    
-    // Calculer les statistiques
-    $totalDepots = 0;
-    $totalRetraits = 0;
-    $totalTransferts = 0;
-    $totalFrais = 0;
-    
-    foreach ($transactions as $tx) {
-        $totalFrais += $tx->frais ?? 0;
+    /**
+     * Historique des transactions
+     */
+    public function historique()
+    {
+        $session = session();
         
-        if (strtolower($tx->type_operation ?? '') == 'depot') {
-            $totalDepots += $tx->montant;
-        } elseif (strtolower($tx->type_operation ?? '') == 'retrait') {
-            $totalRetraits += $tx->montant;
-        } elseif (strtolower($tx->type_operation ?? '') == 'transfert') {
-            $totalTransferts += $tx->montant;
+        if (!$session->get('logged_in')) {
+            return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
         }
+        
+        $clientId = $session->get('client_id');
+        
+        $compteModel = new CompteModel();
+        $clientModel = new ClientModel();
+        
+        $compte = $compteModel->findByClientId($clientId);
+        
+        if (!$compte) {
+            return redirect()->back()->with('error', 'Compte non trouvé');
+        }
+        
+        $db = \Config\Database::connect();
+        
+        $sql = "SELECT 
+                    t.*,
+                    tp.nom as type_operation,
+                    cl1.numero as numero_source,
+                    cl1.nom as nom_source,
+                    cl2.numero as numero_destination,
+                    cl2.nom as nom_destination
+                FROM transactions t
+                LEFT JOIN types_operations tp ON tp.id = t.type_operation_id
+                LEFT JOIN comptes c1 ON c1.id = t.compte_source
+                LEFT JOIN clients cl1 ON cl1.id = c1.client_id
+                LEFT JOIN comptes c2 ON c2.id = t.compte_destination
+                LEFT JOIN clients cl2 ON cl2.id = c2.client_id
+                WHERE t.compte_source = ? OR t.compte_destination = ?
+                ORDER BY t.date_transaction DESC";
+        
+        $transactions = $db->query($sql, [$compte->id, $compte->id])->getResult();
+        
+        $totalDepots = 0;
+        $totalRetraits = 0;
+        $totalTransferts = 0;
+        $totalFrais = 0;
+        
+        foreach ($transactions as $tx) {
+            $totalFrais += $tx->frais ?? 0;
+            
+            if (strtolower($tx->type_operation ?? '') == 'depot') {
+                $totalDepots += $tx->montant;
+            } elseif (strtolower($tx->type_operation ?? '') == 'retrait') {
+                $totalRetraits += $tx->montant;
+            } elseif (strtolower($tx->type_operation ?? '') == 'transfert') {
+                $totalTransferts += $tx->montant;
+            }
+        }
+        
+        $data = [
+            'title' => 'Historique - Mobile Money',
+            'page_title' => 'Historique',
+            'current_page' => 'historique',
+            'transactions' => $transactions,
+            'compte' => $compte,
+            'solde' => $compte->solde,
+            'total_transactions' => count($transactions),
+            'total_depots' => $totalDepots,
+            'total_retraits' => $totalRetraits,
+            'total_transferts' => $totalTransferts,
+            'total_frais' => $totalFrais
+        ];
+        
+        return view('Client/historique', $data);
     }
-    
-    $data = [
-        'title' => 'Historique - Mobile Money',
-        'transactions' => $transactions,
-        'compte' => $compte,
-        'solde' => $compte->solde,
-        'total_transactions' => count($transactions),
-        'total_depots' => $totalDepots,
-        'total_retraits' => $totalRetraits,
-        'total_transferts' => $totalTransferts,
-        'total_frais' => $totalFrais
-    ];
-    
-    return view('Client/historique', $data);
-}
 
+    /**
+     * Profil utilisateur
+     */
+    public function profile()
+    {
+        $session = session();
+        
+        if (!$session->get('logged_in')) {
+            return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
+        }
+        
+        $clientId = $session->get('client_id');
+        $clientModel = new ClientModel();
+        $compteModel = new CompteModel();
+        
+        $client = $clientModel->find($clientId);
+        $compte = $compteModel->findByClientId($clientId);
+        
+        $data = [
+            'title' => 'Mon Profil - Mobile Money',
+            'page_title' => 'Mon Profil',
+            'current_page' => 'profile',
+            'client' => $client,
+            'compte' => $compte,
+            'solde' => $compte ? $compte->solde : 0
+        ];
+        
+        return view('Client/profile', $data);
+    }
 }

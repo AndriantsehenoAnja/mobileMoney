@@ -12,8 +12,13 @@ class TransactionModel extends Model
         'type_operation_id',
         'compte_source',
         'compte_destination',
+        'numero_destination',        // NOUVEAU V2
+        'operateur_destination_id', // NOUVEAU V2
         'montant',
-        'frais',
+        'frais',                     // frais de base
+        'frais_commission_externe',  // NOUVEAU V2 (%)
+        'frais_retrait_inclus',      // NOUVEAU V2 (option client)
+        'frais_total',               // NOUVEAU V2
         'date_transaction'
     ];
     protected $useTimestamps = false;
@@ -27,12 +32,17 @@ class TransactionModel extends Model
      * Calcule le gain réel généré par type d'opération (retrait, transfert, etc.)
      * en faisant la somme des frais perçus sur les transactions passées.
      */
-    public function getGainTotalParType()
+    public function getGainTotalVentile()
     {
-        return $this->select('types_operations.nom as type_operation, SUM(transactions.frais) as total_gain')
-                    ->join('types_operations', 'types_operations.id = transactions.type_operation_id')
-                    ->groupBy('transactions.type_operation_id, types_operations.nom')
-                    ->findAll(); // Retourne un tableau d'objets avec type_operation et total_gain
+        return $this->select('
+                types_operations.nom as type_operation,
+                operateurs.est_notre_operateur,
+                SUM(transactions.frais_total) as total_gain
+            ')
+            ->join('types_operations', 'types_operations.id = transactions.type_operation_id')
+            ->join('operateurs', 'operateurs.id = transactions.operateur_destination_id', 'left')
+            ->groupBy('transactions.type_operation_id, operateurs.est_notre_operateur')
+            ->findAll();
     } 
     public function getTransactionsByCompte($compteId, $limit = null, $offset = 0)
     {
@@ -350,5 +360,19 @@ class TransactionModel extends Model
         }
 
         return $solde;
+    }
+
+    public function getSituationMontantsParOperateur()
+    {
+        return $this->select('
+                operateurs.nom as operateur,
+                COUNT(transactions.id) as nombre_envois,
+                SUM(transactions.montant) as total_montant,
+                SUM(transactions.frais_commission_externe) as total_commissions
+            ')
+            ->join('operateurs', 'operateurs.id = transactions.operateur_destination_id')
+            ->where('operateurs.est_notre_operateur', 0) // Uniquement les opérateurs externes
+            ->groupBy('transactions.operateur_destination_id')
+            ->findAll();
     }
 }

@@ -13,7 +13,7 @@ class PrefixModel extends Model
     protected $useSoftDeletes   = false;
 
     // Champs autorisés lors de l'insertion ou la mise à jour
-    protected $allowedFields    = ['prefixe'];
+    protected $allowedFields    = ['prefixe','operateur_id'];
 
     // Dates
     protected $useTimestamps = false;
@@ -21,6 +21,7 @@ class PrefixModel extends Model
     // Validation
     protected $validationRules      = [
         'prefixe' => 'required|is_unique[prefixes.prefixe]|min_length[2]|max_length[10]',
+        'operateur_id' => 'required|exists[operateurs.id]',
     ];
     protected $validationMessages   = [
         'prefixe' => [
@@ -56,5 +57,14 @@ class PrefixModel extends Model
     public function findByPrefixe(string $prefixe)
     {
         return $this->where('prefixe', $prefixe)->first();
+    }
+
+    public function estNotrePrefixe(string $prefixe)
+    {
+        return $this->select('operateurs.est_notre_operateur')
+                    ->join('operateurs', 'operateurs.id = prefixes.operateur_id')
+                    ->where('prefixes.prefixe', $prefixe)
+                    ->where('operateurs.est_notre_operateur', 1)
+                    ->first() !== null;
     }
 }

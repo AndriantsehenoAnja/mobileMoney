@@ -196,4 +196,23 @@ class ClientModel extends Model
         $numero = $this->nettoyerNumero($numero);
         return preg_match('/^0[3-9][0-9]{8}$/', $numero) === 1;
     }
+
+    public function validerNumerosEnvoiMultiple(array $numeros)
+    {
+        $prefixeModel = new \App\Models\PrefixModel();
+        
+        foreach ($numeros as $numero) {
+            $cleanNum = $this->nettoyerNumero($numero);
+            $pref = substr($cleanNum, 0, 3);
+            
+            // Vérifier si le préfixe est valide et appartient à NOTRE opérateur
+            if (!$prefixeModel->estNotrePrefixe($pref)) {
+                return [
+                    'valide' => false,
+                    'message' => "Le numéro $numero n'appartient pas à notre réseau."
+                ];
+            }
+        }
+        return ['valide' => true];
+    }
 }

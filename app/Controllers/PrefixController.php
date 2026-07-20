@@ -3,88 +3,181 @@
 namespace App\Controllers;
 
 use App\Models\PrefixModel;
+use App\Models\OperateurModel;
 
 class PrefixController extends BaseController
 {
-    public function index(): string
+    /**
+     * Liste des préfixes
+     */
+    public function index()
     {
-        $prefixModel = new PrefixModel();
-        $data = $prefixModel->findAll();
-        return view("prefix/index", ['prefixes' => $data]);
-    }
-
-    public function form()
-    {
-        return view("prefix/form");
-    }
-
-    public function create()
-    {
-        // Sécurité : On vérifie que c'est bien une requête POST
-        if (!$this->request->is('post')) {
-            return redirect()->to('/admin/prefix/form');
+        $session = session();
+        if (!$session->get('admin_logged_in')) {
+            return redirect()->to('/login/admin');
         }
 
         $prefixModel = new PrefixModel();
+        
+        // Récupérer les préfixes avec les informations de leur opérateur associé
+        $prefixes = $prefixModel->getPrefixesAvecOperateur();
+
         $data = [
-            'prefixe' => $this->request->getPost('prefixe')
+            'title'        => 'Gestion des Préfixes',
+            'page_title'   => 'Configuration des préfixes réseaux',
+            'current_page' => 'prefixe',
+            'prefixes'     => $prefixes
         ];
 
-        // insert() renvoie l'ID généré ou false en cas d'échec de validation
-        if ($prefixModel->insert($data) !== false) {
-            return redirect()->to('/admin/prefix')->with('success', 'Préfixe créé avec succès.');
+        return view('admin/prefixe/index', $data);
+    }
+
+    /**
+     * Formulaire de création d'un préfixe
+     */
+    public function create()
+    {
+        $session = session();
+        if (!$session->get('admin_logged_in')) {
+            return redirect()->to('/login/admin');
         }
 
-        // Si l'insertion échoue (ex: doublon), on recharge le formulaire en renvoyant les erreurs
-        return view("prefix/form", [
-            'errors' => $prefixModel->errors(),
-            'old'    => $data // Permet de réafficher ce que l'utilisateur avait tapé
+        $operateurModel = new OperateurModel();
+        $operateurs = $operateurModel->findAll();
+
+        $data = [
+            'title'        => 'Nouveau Préfixe',
+            'page_title'   => 'Ajouter un préfixe',
+            'current_page' => 'prefixe',
+            'operateurs'   => $operateurs
+        ];
+
+        return view('admin/prefixe/form', $data);
+    }
+
+    /**
+     * Enregistrer un nouveau préfixe
+     */
+    public function store()
+    {
+        $session = session();
+        if (!$session->get('admin_logged_in')) {
+            return redirect()->to('/login/admin');
+        }
+
+        $prefixeVal = trim($this->request->getPost('prefixe'));
+        $operateurId = $this->request->getPost('operateur_id');
+        $commission  = $this->request->getPost('commission') ? (float)$this->request->getPost('commission') : 0;
+
+        // Validation basique
+        if (empty($prefixeVal) || empty($operateurId)) {
+            return redirect()->back()->withInput()->with('error', 'Le préfixe et l\'opérateur sont obligatoires.');
+        }
+
+        $prefixModel = new PrefixModel();
+
+        // Vérifier l'unicité du préfixe
+        $existant = $prefixModel->where('prefixe', $prefixeVal)->first();
+        if ($existant) {
+            return redirect()->back()->withInput()->with('error', 'Ce préfixe existe déjà.');
+        }
+
+        $prefixModel->insert([
+            'prefixe'      => $prefixeVal,
+            'operateur_id' => $operateurId,
+            'commission'   => $commission
         ]);
+
+        return redirect()->to('/admin/prefixe')->with('success', 'Préfixe ajouté avec succès.');
     }
 
-    public function edit($id)
+    /**
+     * Formulaire d'édition d'un préfixe
+     */
+    public function edit($id = null)
     {
-        $prefixModel = new PrefixModel();
-        $prefix = $prefixModel->find($id);
-        
-        if (!$prefix) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException("Préfixe non trouvé : " . $id);
-        }
-        
-        return view("prefix/edit", ['prefix' => $prefix]);
-    }
-    
-    public function update($id)
-    {
-        $prefixModel = new PrefixModel();
-
-        if ($this->request->is('post')) {
-            $data = [
-                'prefixe' => $this->request->getPost('prefixe')
-            ];
-
-            if ($prefixModel->update($id, $data)) {
-                return redirect()->to('/admin/prefix')->with('success', 'Préfixe mis à jour.');
-            }
-
-            // En cas d'erreur lors de la modification (ex: le préfixe existe déjà ailleurs)
-            return view("prefix/edit", [
-                'prefix' => $prefixModel->find($id),
-                'errors' => $prefixModel->errors()
-            ]);
+        $session = session();
+        if (!$session->get('admin_logged_in')) {
+            return redirect()->to('/login/admin');
         }
 
-        return redirect()->to('/admin/prefix/edit/' . $id);
+        $prefixModel = new PrefixModel();
+        $prefixe = $prefixModel->find($id);
+
+        if (!$prefixe) {
+            return redirect()->to('/admin/prefixe')->with('error', 'Préfixe introuvable.');
+        }
+
+        $operateurModel = new OperateurModel();
+        $operateurs = $operateurModel->findAll();
+
+        $data = [
+            'title'        => 'Modifier le Préfixe',
+            'page_title'   => 'Modifier le préfixe ' . $prefixe['prefixe'],
+            'current_page' => 'prefixe',
+            'prefixe'      => $prefixe,
+            'operateurs'   => $operateurs
+        ];
+
+        return view('admin/prefixe/form', $data);
     }
 
-    public function delete($id)
+    /**
+     * Mettre à jour un préfixe existant
+     */
+    public function update($id = null)
     {
-        $prefixModel = new PrefixModel();
-        
-        if ($prefixModel->find($id) && $prefixModel->delete($id)) {
-            return redirect()->to('/admin/prefix')->with('success', 'Préfixe supprimé.');
+        $session = session();
+        if (!$session->get('admin_logged_in')) {
+            return redirect()->to('/login/admin');
         }
-        
-        throw new \CodeIgniter\Exceptions\PageNotFoundException("Erreur lors de la suppression du préfixe : " . $id);
+
+        $prefixModel = new PrefixModel();
+        $prefixe = $prefixModel->find($id);
+
+        if (!$prefixe) {
+            return redirect()->to('/admin/prefixe')->with('error', 'Préfixe introuvable.');
+        }
+
+        $prefixeVal  = trim($this->request->getPost('prefixe'));
+        $operateurId = $this->request->getPost('operateur_id');
+        $commission  = $this->request->getPost('commission') ? (float)$this->request->getPost('commission') : 0;
+
+        if (empty($prefixeVal) || empty($operateurId)) {
+            return redirect()->back()->withInput()->with('error', 'Le préfixe et l\'opérateur sont obligatoires.');
+        }
+
+        // Vérifier l'unicité du préfixe hors de lui-même
+        $existant = $prefixModel->where('prefixe', $prefixeVal)->where('id !=', $id)->first();
+        if ($existant) {
+            return redirect()->back()->withInput()->with('error', 'Ce préfixe est déjà utilisé par un autre enregistrement.');
+        }
+
+        $prefixModel->update($id, [
+            'prefixe'      => $prefixeVal,
+            'operateur_id' => $operateurId,
+            'commission'   => $commission
+        ]);
+
+        return redirect()->to('/admin/prefixe')->with('success', 'Préfixe mis à jour avec succès.');
+    }
+
+    /**
+     * Supprimer un préfixe
+     */
+    public function delete($id = null)
+    {
+        $session = session();
+        if (!$session->get('admin_logged_in')) {
+            return redirect()->to('/login/admin');
+        }
+
+        $prefixModel = new PrefixModel();
+        if ($prefixModel->find($id)) {
+            $prefixModel->delete($id);
+            return redirect()->to('/admin/prefixe')->with('success', 'Préfixe supprimé.');
+        }
+
+        return redirect()->to('/admin/prefixe')->with('error', 'Préfixe introuvable.');
     }
 }

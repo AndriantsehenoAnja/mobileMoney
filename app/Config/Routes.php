@@ -5,6 +5,11 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Home::index');
-$routes->get('/produits', 'ProduitController::index');
-$routes->get('/produit/(:num)', 'ProduitController::show/$1');
+$routes->group('prefix', ['namespace' => 'App\Controllers'], function ($routes) {
+    $routes->get('/', 'PrefixController::index');
+    $routes->get('form', 'PrefixController::form');
+    $routes->post('create', 'PrefixController::create');
+    $routes->get('edit/(:num)', 'PrefixController::edit/$1');
+    $routes->post('update/(:num)', 'PrefixController::update/$1');
+    $routes->get('delete/(:num)', 'PrefixController::delete/$1');
+});

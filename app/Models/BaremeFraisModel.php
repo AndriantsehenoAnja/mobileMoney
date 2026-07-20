@@ -37,4 +37,10 @@ class BaremeFraisModel extends Model
                     ->where('montant_max >=', $montant)
                     ->first();
     }
+
+    public function calculerFrais(int $typeOperationId, float $montant)
+    {
+        $bareme = $this->obtenirFrais($typeOperationId, $montant);
+        return $bareme ? (float) $bareme['frais'] : 0.0;
+    }
 }

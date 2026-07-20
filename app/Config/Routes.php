@@ -9,8 +9,24 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'LoginController::index');
 $routes->get('login', 'LoginController::index');
 $routes->post('login/authenticate', 'LoginController::login');
+$routes->get('/logout','LoginController::logout');
 
 $routes->get('/Client', 'ClientController::index', ['filter' => 'auth']);
+// Dépôt
+$routes->get('/depot', 'ClientController::depot', ['filter' => 'auth']);
+$routes->post('/depot/effectuer', 'ClientController::effectuerDepot', ['filter' => 'auth']);
+
+// Retrait
+$routes->get('/retrait', 'ClientController::retrait', ['filter' => 'auth']);
+$routes->post('/retrait/effectuer', 'ClientController::effectuerRetrait', ['filter' => 'auth']);
+
+// Transfert
+$routes->get('transfert', 'ClientController::transfert');
+$routes->get('verifier-destinataire', 'ClientController::verifierDestinataire');
+$routes->post('transfert/effectuer', 'ClientController::effectuerTransfert');
+
+// historique
+$routes->get('historique', 'ClientController::historique');
 
 $routes->group('admin',function($routes){
     $routes->get('/', 'AdminController::index');
@@ -22,7 +38,6 @@ $routes->group('admin',function($routes){
         $routes->post('update/(:num)', 'PrefixController::update/$1');
         $routes->get('delete/(:num)', 'PrefixController::delete/$1');
     });
-
     $routes->group('type-operation', ['namespace' => 'App\Controllers'], function ($routes) {
         $routes->get('/', 'TypeOperationController::index');
     });

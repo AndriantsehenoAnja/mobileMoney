@@ -13,10 +13,10 @@
 [x] Bryan|00h00|Créer les modèles ClientModel, CompteModel, TransactionModel|app/Models/*
 [x] Bryan|00h00|Développer le login automatique avec numéro de téléphone|Client/AuthController.php, client/login.php
 [x] Bryan|00h00|Développer l'affichage du solde|Client/ClientController.php, client/solde.php
-[] Bryan|00h00|Développer le dépôt automatique|Client/DepotController.php, client/depot.php
-[] Bryan|00h00|Développer le retrait avec calcul des frais|Client/RetraitController.php, client/retrait.php
-[] Bryan|00h00|Développer le transfert entre clients avec calcul des frais|Client/TransfertController.php, client/transfert.php
-[] Bryan|00h00|Développer l'historique des transactions|Client/HistoriqueController.php, client/historique.php
+[x] Bryan|00h00|Développer le dépôt automatique|Client/DepotController.php, client/depot.php
+[x] Bryan|00h00|Développer le retrait avec calcul des frais|Client/RetraitController.php, client/retrait.php
+[x] Bryan|00h00|Développer le transfert entre clients avec calcul des frais|Client/TransfertController.php, client/transfert.php
+[x] Bryan|00h00|Développer l'historique des transactions|Client/HistoriqueController.php, client/historique.php
 
 Commun|00h00|Création des données de test (préfixes, barèmes, types d'opérations)|base.sql
 Commun|00h00|Tests fonctionnels et correction des bugs|Tout le projet

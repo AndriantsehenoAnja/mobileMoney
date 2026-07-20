@@ -25,6 +25,7 @@ Commun|00h00|Tests fonctionnels et correction des bugs|Tout le projet
 Commun|00h00|Création du TAG v1 + mise à jour Taches.md|Git + Taches.md
 
 
+
 ### 🛠️ Étudiant 1 - Partie Administrateur
 
 #### 1. Migration base de données V2
@@ -113,3 +114,40 @@ $routes->group('admin', function($routes) {
     // Gains par opérateur
     $routes->get('gains-operateurs', 'SituationCompteController::gainsParOperateur');
 });
+```
+
+
+
+## Clients
+
+| # | Tâche | Statut |
+|---|-------|--------|
+| 1 | Option "Frais inclus" pour retrait | ⬜ |
+| 2 | Transfert multiple vers plusieurs numéros | ⬜ |
+
+---
+
+## 🔨 Tâches détaillées
+
+### 1. Option "Frais inclus" pour retrait
+
+#### 📁 Fichiers concernés
+- `app/Controllers/ClientController.php`
+- `app/Models/TransactionModel.php`
+- `app/Views/Client/retrait.php`
+- `app/Views/Client/historique.php`
+
+#### 📝 Étapes
+
+**1.1 Modifier `TransactionModel.php`**
+- [ ] Ajouter `frais_inclus` dans `$allowedFields`
+```php
+protected $allowedFields = [
+    'type_operation_id',
+    'compte_source',
+    'compte_destination',
+    'montant',
+    'frais',
+    'date_transaction',
+    'frais_inclus'  // ✅ AJOUTER
+];

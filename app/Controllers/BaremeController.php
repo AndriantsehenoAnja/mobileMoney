@@ -6,13 +6,6 @@ use App\Models\BaremeFraisModel;
 use App\Models\TypeOperationModel;
 class BaremeController extends BaseController
 {
-    // public function index(): string
-    // {
-    //     $baremeModel = new BaremeModel();
-    //     $data = $baremeModel->findAll();
-    //     return view("bareme/index", ['baremes' => $data]);
-    // }
-
     public function showbyTypeOperation($id)
     {
         $baremeModel = new BaremeFraisModel();
@@ -41,8 +34,6 @@ class BaremeController extends BaseController
 
         return view("bareme/edit", ['bareme' => $bareme, 'type_operations' => $type_operations]);
     }
-
-
     
     public function update($id)
     {
@@ -64,7 +55,7 @@ class BaremeController extends BaseController
             ];
 
             if ($baremeModel->update($id, $data)) {
-                return redirect()->to('/bareme/showbytypeoperation/' . $data['type_operation_id'])
+                return redirect()->to('/admin/bareme/showbytypeoperation/' . $data['type_operation_id'])
                                 ->with('success', 'Bareme updated successfully.');
             } else {
                 return view("bareme/edit", [
@@ -95,7 +86,7 @@ class BaremeController extends BaseController
             ];
 
             if ($baremeModel->insert($data)) {
-                return redirect()->to('/type-operation')->with('success', 'Bareme added successfully.');
+                return redirect()->to('/admin/type-operation')->with('success', 'Bareme added successfully.');
             } else {
                 return view("bareme/add", [
                     'errors' => $baremeModel->errors(),

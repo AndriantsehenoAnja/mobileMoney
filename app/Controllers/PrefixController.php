@@ -1,64 +1,90 @@
 <?php
 
-namespace App\Models;
+namespace App\Controllers;
 
-use CodeIgniter\Model;
+use App\Models\PrefixModel;
 
-class PrefixModel extends Model
+class PrefixController extends BaseController
 {
-    protected $table            = 'prefixes';
-    protected $primaryKey       = 'id';
-    protected $useAutoIncrement = true;
-    protected $returnType       = 'array';
-    protected $useSoftDeletes   = false;
-
-    protected $allowedFields    = ['prefixe'];
-    protected $useTimestamps = false;
-
-    protected $validationRules      = [
-        'prefixe' => 'required|is_unique[prefixes.prefixe]|min_length[2]|max_length[10]',
-    ];
-    protected $validationMessages   = [
-        'prefixe' => [
-            'required'  => 'Le préfixe est obligatoire.',
-            'is_unique' => 'Ce préfixe existe déjà dans la base de données.',
-        ],
-    ];
-    protected $skipValidation       = false;
-
-    public function getPrefixById(int $id)
+    public function index(): string
     {
-        return $this->find($id);
+        $prefixModel = new PrefixModel();
+        $data = $prefixModel->findAll();
+        return view("prefix/index", ['prefixes' => $data]);
     }
 
-    public function getAllPrefixes()
+    public function form()
     {
-        return $this->findAll();
+        return view("prefix/form");
     }
 
-    public function addPrefix(string $prefix)
+    public function create()
     {
-        return $this->insert(['prefixe' => $prefix]);
-    }   
+        // Sécurité : On vérifie que c'est bien une requête POST
+        if (!$this->request->is('post')) {
+            return redirect()->to('/admin/prefix/form');
+        }
 
-    public function updatePrefix(int $id, string $prefix)
-    {
-        return $this->update($id, ['prefixe' => $prefix]);
+        $prefixModel = new PrefixModel();
+        $data = [
+            'prefixe' => $this->request->getPost('prefixe')
+        ];
+
+        // insert() renvoie l'ID généré ou false en cas d'échec de validation
+        if ($prefixModel->insert($data) !== false) {
+            return redirect()->to('/admin/prefix')->with('success', 'Préfixe créé avec succès.');
+        }
+
+        // Si l'insertion échoue (ex: doublon), on recharge le formulaire en renvoyant les erreurs
+        return view("prefix/form", [
+            'errors' => $prefixModel->errors(),
+            'old'    => $data // Permet de réafficher ce que l'utilisateur avait tapé
+        ]);
     }
 
-    public function deletePrefix(int $id)
+    public function edit($id)
     {
-        return $this->delete($id);
+        $prefixModel = new PrefixModel();
+        $prefix = $prefixModel->find($id);
+        
+        if (!$prefix) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException("Préfixe non trouvé : " . $id);
+        }
+        
+        return view("prefix/edit", ['prefix' => $prefix]);
+    }
+    
+    public function update($id)
+    {
+        $prefixModel = new PrefixModel();
+
+        if ($this->request->is('post')) {
+            $data = [
+                'prefixe' => $this->request->getPost('prefixe')
+            ];
+
+            if ($prefixModel->update($id, $data)) {
+                return redirect()->to('/admin/prefix')->with('success', 'Préfixe mis à jour.');
+            }
+
+            // En cas d'erreur lors de la modification (ex: le préfixe existe déjà ailleurs)
+            return view("prefix/edit", [
+                'prefix' => $prefixModel->find($id),
+                'errors' => $prefixModel->errors()
+            ]);
+        }
+
+        return redirect()->to('/admin/prefix/edit/' . $id);
     }
 
-    public function findByPrefixe(string $prefixe)
+    public function delete($id)
     {
-        return $this->where('prefixe', $prefixe)->first();
-    }
-
-    // ✅ Méthode manquante ajoutée
-    public function prefixeExists(string $prefixe)
-    {
-        return $this->where('prefixe', $prefixe)->countAllResults() > 0;
+        $prefixModel = new PrefixModel();
+        
+        if ($prefixModel->find($id) && $prefixModel->delete($id)) {
+            return redirect()->to('/admin/prefix')->with('success', 'Préfixe supprimé.');
+        }
+        
+        throw new \CodeIgniter\Exceptions\PageNotFoundException("Erreur lors de la suppression du préfixe : " . $id);
     }
 }

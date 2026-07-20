@@ -6,6 +6,9 @@
     <title>Créer un préfixe</title>
 </head>
 <body>
+    <?= $this->extend('admin/layout') ?>
+
+<?= $this->section('content') ?>
     <h1>Créer un préfixe</h1>
     <?php if (isset($_GET['error'])): ?>
         <p style="color: red;">Erreur lors de la création du préfixe. Veuillez réessayer.<?= $_GET['error'] ?></p>
@@ -15,5 +18,6 @@
         <input type="text" id="prefixe" name="prefixe" required>
         <button type="submit">Créer</button>
     </form>
+    <?= $this->endSection() ?>
 </body>
 </html>

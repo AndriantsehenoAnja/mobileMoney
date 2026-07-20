@@ -6,6 +6,9 @@
     <title>liste bareme pour <?= $type_operation['nom'] ?></title>
 </head>
 <body>
+    <?= $this->extend('admin/layout') ?>
+
+<?= $this->section('content') ?>
     <h1>Liste des barèmes pour <?= $type_operation['nom'] ?></h1>
     <table border="1">
         <thead>
@@ -27,11 +30,13 @@
                     <td><?= $bareme['montant_max'] ?></td>
                     <td><?= $bareme['frais'] ?></td>
                     <td>
-                        <a href="/bareme/edit/<?= $bareme['id'] ?>">Modifier</a> |
+                        <a href="/admin/bareme/edit/<?= $bareme['id'] ?>">Modifier</a> 
                     </td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
+    <?= $this->endSection() ?>
+
 </body>
 </html>

@@ -10,7 +10,7 @@ class TypeOperationController extends BaseController
     {
         $typeOperationModel = new TypeOperationModel();
         $data = $typeOperationModel->findAll();
-        return view("type_operation/index", ['type_operations' => $data]);
+        return view("/type_operation/index", ['type_operations' => $data]);
     }
 
 }

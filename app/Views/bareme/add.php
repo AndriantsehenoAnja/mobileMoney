@@ -6,8 +6,11 @@
     <title>Ajouter un Barème</title>
 </head>
 <body>
+    <?= $this->extend('admin/layout') ?>
+
+<?= $this->section('content') ?>
     <h1>Ajouter un Barème</h1>
-    <form action="/bareme/addbareme" method="post">
+    <form action="/admin/bareme/addbareme" method="post">
         <label for="type_operation_id">Type d'opération:</label>
         <select name="type_operation_id" id="type_operation_id">
             <?php foreach ($type_operations as $type_operation): ?>
@@ -30,5 +33,7 @@
 
         <button type="submit">Ajouter</button>
     </form>
+    <?= $this->endSection() ?>
+
 </body>
 </html>

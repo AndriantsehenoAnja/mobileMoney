@@ -19,7 +19,7 @@ CREATE TABLE prefixesOperateurExterne(
 CREATE TABLE clients (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nom TEXT NOT NULL,
-    numero TEXT UNIQUE NOT NULL,
+    numero TEXT UNIQUE NOT NULL,    
     prefixe_id INTEGER,
     date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(prefixe_id) REFERENCES prefixes(id)

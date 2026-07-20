@@ -196,4 +196,6 @@ class ClientController extends BaseController
         return redirect()->to('/Client')->with('success', $message);
     }
 
+    
+
 }

@@ -6,8 +6,12 @@
     <title>liste prefixes</title>
 </head>
 <body>
+    <?= $this->extend('admin/layout') ?>
+
+<?= $this->section('content') ?>
+
     <h1>Liste des préfixes</h1>
-    <a href="/prefix/form">Créer un nouveau préfixe</a>
+    <a href="/admin/prefix/form">Créer un nouveau préfixe</a>
     <table border="1">
         <thead>
             <tr>
@@ -22,12 +26,14 @@
                     <td><?= $prefix['id'] ?></td>
                     <td><?= $prefix['prefixe'] ?></td>
                     <td>
-                        <a href="/prefix/edit/<?= $prefix['id'] ?>">Modifier</a> |
-                        <a href="/prefix/delete/<?= $prefix['id'] ?>" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce préfixe ?')">Supprimer</a>
+                        <a href="/admin/prefix/edit/<?= $prefix['id'] ?>">Modifier</a> |
+                        <a href="/admin/prefix/delete/<?= $prefix['id'] ?>" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce préfixe ?')">Supprimer</a>
                     </td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
+
+<?= $this->endSection() ?>
 </body>
 </html>

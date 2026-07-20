@@ -6,7 +6,10 @@
     <title>Modifier un Barème</title>
 </head>
 <body>
-    <form action="/bareme/update/<?= $bareme['id'] ?>" method="post">
+    <?= $this->extend('admin/layout') ?>
+
+<?= $this->section('content') ?>
+    <form action="/admin/bareme/update/<?= $bareme['id'] ?>" method="post">
         <label for="type_operation_id">Type d'opération:</label>
         <select name="type_operation_id" id="type_operation_id">
             <?php foreach ($type_operations as $type_operation): ?>
@@ -31,5 +34,7 @@
 
         <button type="submit">Modifier</button>
     </form>
+    <?= $this->endSection() ?>
+
 </body>
 </html>

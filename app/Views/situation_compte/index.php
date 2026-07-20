@@ -13,6 +13,9 @@
 </head>
 <body>
 
+<?= $this->extend('admin/layout') ?>
+
+<?= $this->section('content') ?>
     <h1>Situation Récapitulative des Comptes Clients</h1>
 
     <?php if (!empty($clientsSituation)): ?>
@@ -47,6 +50,7 @@
     <?php else: ?>
         <p>Aucun compte ou client enregistré pour le moment.</p>
     <?php endif; ?>
+    <?= $this->endSection() ?>
 
 </body>
 </html>

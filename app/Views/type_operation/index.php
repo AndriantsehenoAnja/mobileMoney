@@ -6,7 +6,10 @@
     <title>liste type operation</title>
 </head>
 <body>
-    <a href="/bareme/addbareme">Ajouter un Bareme</a>
+    <?= $this->extend('admin/layout') ?>
+
+<?= $this->section('content') ?>
+    <a href="/admin/bareme/addbareme">Ajouter un Bareme</a>
     <h1>Liste des types d'opérations</h1>
     <table border="1">
         <thead>
@@ -22,11 +25,13 @@
                     <td><?= $type_operation['id'] ?></td>
                     <td><?= $type_operation['nom'] ?></td>
                     <td>
-                        <a href="/bareme/showbytypeoperation/<?= $type_operation['id'] ?>">voir bareme</a> |
+                        <a href="/admin/bareme/showbytypeoperation/<?= $type_operation['id'] ?>">voir bareme</a> 
                     </td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
+    <?= $this->endSection() ?>
+
 </body>
 </html>

@@ -1,0 +1,13 @@
+CRITICAL - 2026-07-20 09:41:38 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "/admin/type_operation/index.php"
+[Method: GET, Route: admin/type-operation]
+in SYSTEMPATH/Exceptions/FrameworkException.php on line 39.
+ 1 SYSTEMPATH/View/View.php(228): CodeIgniter\Exceptions\FrameworkException::forInvalidFile()
+ 2 SYSTEMPATH/Common.php(1250): CodeIgniter\View\View->render()
+ 3 APPPATH/Controllers/TypeOperationController.php(13): view()
+ 4 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\TypeOperationController->index()
+ 5 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
+ 6 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 7 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 9 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+10 SYSTEMPATH/rewrite.php(44): require_once('/home/itu/Documents/s4/SystemdInformationRojo/github/mobileMoney/public/index.php')

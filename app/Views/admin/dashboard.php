@@ -7,8 +7,9 @@
     <title>Document</title>
 </head>
 <body>
-    
-    
+    <?= $this->extend('admin/layout') ?>
+
+<?= $this->section('content') ?>
         <h2>Tableau de Bord Administrateur</h2>
         <p style="color: #7f8c8d;">Statistiques globales en temps réel du système Mobile Money.</p>
     
@@ -69,6 +70,6 @@
             <p>Aucune transaction n'a encore transité par le système.</p>
         <?php endif; ?>
     
-    
+    <?= $this->endSection() ?>
 </body>
 </html>

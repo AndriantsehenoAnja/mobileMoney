@@ -13,7 +13,10 @@
 </head>
 <body>
 
+<?= $this->extend('admin/layout') ?>
 
+<?= $this->section('content') ?>
+<h2>Situation gain via les différents frais ( retrait et transfert)</h2>
     <?php if (!empty($gainTotal)): ?>
         <table class="table-situation">
             <thead>
@@ -34,6 +37,7 @@
     <?php else: ?>
         <p>pas de gain</p>
     <?php endif; ?>
+    <?= $this->endSection() ?>
 
 </body>
 </html>

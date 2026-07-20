@@ -76,11 +76,18 @@ INSERT INTO prefixes (id, prefixe, operateur_id) VALUES
 
 INSERT INTO clients (id, nom, numero, prefixe_id, date_creation) VALUES
 (1, 'Rabe Jean', '0341234567', 1, '2026-01-10 09:00:00'),
-(2, 'Rakoto Marie', '0389876543', 2, '2026-01-15 10:30:00');
+(2, 'Rakoto Marie', '0389876543', 2, '2026-01-15 10:30:00'),
+(3, 'Rakoto bob', '0389876542', 2, '2026-01-15 10:30:00'),
+(4, 'Rakoto Samuel', '0389876541', 2, '2026-01-15 10:30:00');
+
 
 INSERT INTO comptes (id, client_id, solde) VALUES
 (1, 1, 250000.00),
 (2, 2, 120000.00);
+
+INSERT INTO comptes (id, client_id, solde) VALUES
+(3, 3, 50000.00),
+(4, 4, 75000.00);
 
 INSERT INTO types_operations (id, nom) VALUES
 (1, 'Depot'),

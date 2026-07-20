@@ -46,6 +46,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link <?= ($current_page == 'multitransfert') ? 'active' : '' ?>" href="/client/transfert-multiple">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span class="link-text">MultiTransfert</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link <?= ($current_page == 'historique') ? 'active' : '' ?>" href="/historique">
                     <i class="fas fa-history"></i>
                     <span class="link-text">Historique</span>

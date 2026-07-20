@@ -67,4 +67,11 @@ class PrefixModel extends Model
                     ->where('operateurs.est_notre_operateur', 1)
                     ->first() !== null;
     }
+    public function findByPrefixeWithOperateur(string $prefixe)
+    {
+        return $this->select('prefixes.*, operateurs.nom AS nom_operateur, operateurs.commission, operateurs.est_notre_operateur')
+                    ->join('operateurs', 'operateurs.id = prefixes.operateur_id')
+                    ->where('prefixes.prefixe', $prefixe)
+                    ->first(); 
+    }
 }

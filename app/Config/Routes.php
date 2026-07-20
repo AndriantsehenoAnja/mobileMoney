@@ -35,6 +35,9 @@ $routes->group('client', ['filter' => 'auth'], function ($routes) {
     $routes->get('transfert', 'ClientController::transfert');
     $routes->get('verifier-destinataire', 'ClientController::verifierDestinataire');
     $routes->post('transfert/effectuer', 'ClientController::effectuerTransfert');
+    // Multiple transfert
+    $routes->get('transfert-multiple', 'ClientController::transfertMultiple');
+    $routes->post('transfert-multiple/effectuer', 'ClientController::effectuerTransfertMultiple');
 
     // Historique des opérations
     $routes->get('historique', 'ClientController::historique');

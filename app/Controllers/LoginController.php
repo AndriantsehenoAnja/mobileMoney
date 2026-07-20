@@ -9,6 +9,12 @@ class LoginController extends BaseController
     public function aller(){
         return view("index");
     }
+
+    /**
+     * Affiche la page de connexion ou redirige si déjà connecté
+     * 
+     * @return string|RedirectResponse
+     */
     public function index(): string
     {
         $session = session();

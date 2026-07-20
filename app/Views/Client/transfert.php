@@ -13,11 +13,6 @@
             <strong>📱 Votre numéro :</strong> <?= $client->numero ?? '' ?>
         </div>
         
-        <div class="alert alert-warning">
-            <i class="fas fa-info-circle"></i> 
-            <strong>Note V2 :</strong> Pour envoyer vers <strong>plusieurs numéros</strong>, séparez-les par des espaces ou virgules. L'envoi multiple est réservé aux numéros de <strong>notre réseau</strong>.
-        </div>
-
         <form action="/transfert/effectuer" method="POST" id="transfertForm">
             <?= csrf_field() ?>
             
@@ -29,9 +24,9 @@
                 <textarea 
                        class="form-control" 
                        id="numeros_destinataires" 
-                       name="numeros_destinataires" 
+                       name="numero_destinataire" 
                        rows="2"
-                       placeholder="Ex simple: 0341234567 &#10;Ex multiple: 0341234567, 0349876543" 
+                       placeholder="Ex simple: 0341234567" 
                        required><?= old('numeros_destinataires') ?></textarea>
                 <div class="form-text">Entrez un ou plusieurs numéros à 10 chiffres.</div>
             </div>

@@ -13,7 +13,7 @@ $routes->get('/logout','ClientController::logout');
 
 $routes->get('/Client', 'ClientController::index', ['filter' => 'auth']);
 $routes->get('/depot', 'ClientController::depot', ['filter' => 'auth']);
-
+$routes->post('/depot/effectuer', 'ClientController::effectuerDepot', ['filter' => 'auth']);
 
 $routes->group('prefix', ['namespace' => 'App\Controllers'], function ($routes) {
     $routes->get('/', 'PrefixController::index');

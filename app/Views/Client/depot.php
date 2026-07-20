@@ -23,7 +23,7 @@
     
     <p><strong>Solde disponible :</strong> <?= number_format($solde ?? 0, 2) ?> Ar</p>
 
-    <form action="/client/depot/effectuer" method="POST">
+    <form action="/depot/effectuer" method="POST">
         <?= csrf_field() ?>
         
         <label for="montant">Montant à déposer :</label>
@@ -48,14 +48,6 @@
             <button type="button" onclick="setMontant(25000)">25 000 Ar</button>
             <button type="button" onclick="setMontant(50000)">50 000 Ar</button>
         </div>
-        <br>
-
-        <label for="description">Description (facultatif) :</label>
-        <input type="text" 
-               id="description" 
-               name="description" 
-               placeholder="Motif du dépôt"
-               value="<?= old('description') ?>">
         <br><br>
 
         <button type="submit" id="depotBtn">Effectuer le dépôt</button>

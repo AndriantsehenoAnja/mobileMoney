@@ -296,7 +296,6 @@ class ClientController extends BaseController
     public function transfert()
     {
         $session = session();
-        
         if (!$session->get('logged_in')) {
             return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
         }
@@ -304,17 +303,22 @@ class ClientController extends BaseController
         $clientId = $session->get('client_id');
         $compteModel = new CompteModel();
         $clientModel = new ClientModel();
+        $operateurModel = new OperateurModel();
         
         $compte = $compteModel->findByClientId($clientId);
         $client = $clientModel->find($clientId);
         
+        // Récupérer la liste des opérateurs externes pour information/commissions dans la vue
+        $operateursExternes = $operateurModel->getOperateursExternes();
+
         $data = [
-            'title' => 'Transfert - Mobile Money',
-            'page_title' => 'Transfert',
-            'current_page' => 'transfert',
-            'solde' => $compte ? $compte->solde : 0,
-            'compte' => $compte,
-            'client' => $client
+            'title'               => 'Transfert - Mobile Money',
+            'page_title'          => 'Transfert d\'argent',
+            'current_page'        => 'transfert',
+            'solde'               => $compte ? $compte->solde : 0,
+            'compte'              => $compte,
+            'client'              => $client,
+            'operateursExternes'  => $operateursExternes
         ];
         
         return view('Client/transfert', $data);
@@ -388,103 +392,181 @@ class ClientController extends BaseController
     public function effectuerTransfert()
     {
         $session = session();
-        
         if (!$session->get('logged_in')) {
             return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
         }
-        
+
         $clientId = $session->get('client_id');
         $clientNumero = $session->get('client_numero');
-        
-        $montant = $this->request->getPost('montant');
-        $numeroDestinataire = $this->request->getPost('numero_destinataire');
-        
-        if (empty($numeroDestinataire) || strlen($numeroDestinataire) !== 10) {
-            return redirect()->back()->with('error', 'Veuillez saisir un numéro de destinataire valide (10 chiffres)');
-        }
-        
-        if ($numeroDestinataire == $clientNumero) {
-            return redirect()->back()->with('error', 'Vous ne pouvez pas vous transférer de l\'argent à vous-même');
-        }
-        
-        if (empty($montant) || !is_numeric($montant) || $montant <= 0) {
+
+        $montantGlobal = (float) $this->request->getPost('montant');
+        $numerosBruts  = $this->request->getPost('numeros_destinataires'); // Peut être une chaîne séparée par des virgules/espaces ou un tableau
+        $inclureFraisRetrait = $this->request->getPost('inclure_frais_retrait') ? true : false;
+
+        // 1. Validation du montant global
+        if (empty($montantGlobal) || $montantGlobal <= 0) {
             return redirect()->back()->with('error', 'Veuillez saisir un montant valide');
         }
-        
-        $montant = (float) $montant;
-        
-        if ($montant < 100) {
-            return redirect()->back()->with('error', 'Le montant minimum de transfert est de 100 Ar');
+
+        // 2. Traitement et nettoyage des numéros
+        if (is_string($numerosBruts)) {
+            // Sépare par virgule, point-virgule, espace ou retour à la ligne
+            $listeNumeros = preg_split('/[\s,;]+/', trim($numerosBruts));
+        } else {
+            $listeNumeros = (array) $numerosBruts;
         }
-        
-        $clientModel = new ClientModel();
-        $compteModel = new CompteModel();
-        $transactionModel = new TransactionModel();
-        $typeOperationModel = new TypeOperationModel();
-        $baremeFraisModel = new BaremeFraisModel();
-        
+
+        // Filtrer les valeurs vides
+        $listeNumeros = array_filter(array_map('trim', $listeNumeros));
+
+        if (empty($listeNumeros)) {
+            return redirect()->back()->with('error', 'Veuillez saisir au moins un numéro destinataire');
+        }
+
+        $nombreDestinataires = count($listeNumeros);
+        $estMultiple = ($nombreDestinataires > 1);
+
+        // 3. Initialisation des Modèles
+        $clientModel         = new ClientModel();
+        $compteModel         = new CompteModel();
+        $transactionModel    = new TransactionModel();
+        $typeOperationModel  = new TypeOperationModel();
+        $baremeFraisModel    = new BaremeFraisModel();
+        $prefixModel         = new PrefixModel();
+
         $compteSource = $compteModel->findByClientId($clientId);
-        
         if (!$compteSource) {
             return redirect()->back()->with('error', 'Compte source non trouvé');
         }
-        
-        $destinataire = $clientModel->findByNumero($numeroDestinataire);
-        
-        if (!$destinataire) {
-            return redirect()->back()->with('error', 'Destinataire non trouvé');
+
+        // 4. VERIFICATION V2 : Envoi Multiple = Même opérateur uniquement
+        if ($estMultiple) {
+            foreach ($listeNumeros as $num) {
+                $pref = substr($num, 0, 3);
+                if (!$prefixModel->estNotrePrefixe($pref)) {
+                    return redirect()->back()->with('error', "L'envoi multiple est réservé uniquement aux numéros de notre réseau. Le numéro $num appartient à un autre opérateur.");
+                }
+            }
         }
-        
-        $compteDestination = $compteModel->findByClientId($destinataire->id);
-        
-        if (!$compteDestination) {
-            return redirect()->back()->with('error', 'Le destinataire n\'a pas de compte actif');
+
+        // 5. Calcul du montant par destinataire
+        $montantParPersonne = $montantGlobal / $nombreDestinataires;
+
+        if ($montantParPersonne < 100) {
+            return redirect()->back()->with('error', 'Le montant unitaire minimum par destinataire est de 100 Ar');
         }
-        
+
+        // Récupérer les types d'opérations
         $typeTransfert = $typeOperationModel->where('nom', 'Transfert')->first();
-        
-        if (!$typeTransfert) {
-            return redirect()->back()->with('error', 'Type d\'opération non configuré');
+        $typeRetrait   = $typeOperationModel->where('nom', 'Retrait')->first();
+
+        // 6. Analyse des destinataires et calcul des frais totaux
+        $destinatairesData = [];
+        $fraisBaseTotal = 0;
+        $commissionExterneTotal = 0;
+        $fraisRetraitInclusTotal = 0;
+
+        foreach ($listeNumeros as $num) {
+            if ($num === $clientNumero) {
+                return redirect()->back()->with('error', 'Vous ne pouvez pas effectuer un transfert vers votre propre numéro');
+            }
+
+            $pref = substr($num, 0, 3);
+            $estNotreReseau = $prefixModel->estNotrePrefixe($pref);
+            $prefixInfo = $prefixModel->findByPrefixeWithOperateur($pref);
+
+            // Recherche si le client existe chez nous
+            $destClient = $clientModel->findByNumero($num);
+            $destCompte = $destClient ? $compteModel->findByClientId($destClient->id) : null;
+
+            // Calcul des frais de transfert de base[cite: 1, 3]
+            $fraisBase = $baremeFraisModel->calculerFrais($typeTransfert['id'], $montantParPersonne);
+            
+            // Calcul commission réseau externe si applicable
+            $commExterne = 0;
+            if (!$estNotreReseau && isset($prefixInfo['commission'])) {
+                $commExterne = ($montantParPersonne * $prefixInfo['commission']) / 100;
+            }
+
+            // Calcul frais de retrait inclus (V2: PAS de frais de retrait si autre opérateur)
+            $fraisRetraitInc = 0;
+            if ($inclureFraisRetrait && $estNotreReseau && $typeRetrait) {
+                $fraisRetraitInc = $baremeFraisModel->calculerFrais($typeRetrait['id'], $montantParPersonne);
+            }
+
+            $fraisTotalUnitaire = $fraisBase + $commExterne + $fraisRetraitInc;
+
+            $fraisBaseTotal          += $fraisBase;
+            $commissionExterneTotal  += $commExterne;
+            $fraisRetraitInclusTotal += $fraisRetraitInc;
+
+            $destinatairesData[] = [
+                'numero'               => $num,
+                'est_notre_reseau'     => $estNotreReseau,
+                'operateur_id'         => $prefixInfo['operateur_id'] ?? null,
+                'client_dest'          => $destClient,
+                'compte_dest'          => $destCompte,
+                'frais_base'           => $fraisBase,
+                'commission_externe'   => $commExterne,
+                'frais_retrait_inclus' => $fraisRetraitInc,
+                'frais_total'          => $fraisTotalUnitaire,
+            ];
         }
-        
-        $frais = $baremeFraisModel->calculerFrais($typeTransfert['id'], $montant);
-        $montantTotal = $montant + $frais;
-        
-        if ($compteSource->solde < $montantTotal) {
-            return redirect()->back()->with('error', 'Solde insuffisant. Solde disponible : ' . number_format($compteSource->solde, 2) . ' Ar');
+
+        // 7. Vérification du solde global nécessaire
+        $fraisGlobaux = $fraisBaseTotal + $commissionExterneTotal + $fraisRetraitInclusTotal;
+        $montantTotalADebiter = $montantGlobal + $fraisGlobaux;
+
+        if ($compteSource->solde < $montantTotalADebiter) {
+            return redirect()->back()->with('error', 'Solde insuffisant. Montant requis (avec frais) : ' . number_format($montantTotalADebiter, 2) . ' Ar. Solde dispo : ' . number_format($compteSource->solde, 2) . ' Ar');
         }
-        
+
+        // 8. Exécution de la transaction SQL
         $db = \Config\Database::connect();
         $db->transStart();
-        
+
         try {
-            $compteModel->debiter($compteSource->id, $montantTotal);
-            $compteModel->crediter($compteDestination->id, $montant);
-            
-            $transactionModel->insert([
-                'type_operation_id' => $typeTransfert['id'],
-                'compte_source' => $compteSource->id,
-                'compte_destination' => $compteDestination->id,
-                'montant' => $montant,
-                'frais' => $frais
-            ]);
-            
+            // Débiter le montant global + frais du compte source
+            $compteModel->debiter($compteSource->id, $montantTotalADebiter);
+
+            foreach ($destinatairesData as $dest) {
+                // Créditer le destinataire s'il est un client de notre réseau
+                if ($dest['est_notre_reseau'] && $dest['compte_dest']) {
+                    // Si l'option "inclure frais de retrait" est cochée, on ajoute les frais de retrait au montant crédité
+                    $montantAValiderSurCompte = $montantParPersonne + $dest['frais_retrait_inclus'];
+                    $compteModel->crediter($dest['compte_dest']->id, $montantAValiderSurCompte);
+                }
+
+                // Enregistrer chaque transaction
+                $transactionModel->insert([
+                    'type_operation_id'        => $typeTransfert['id'],
+                    'compte_source'            => $compteSource->id,
+                    'compte_destination'       => $dest['compte_dest'] ? $dest['compte_dest']->id : null,
+                    'numero_destination'       => $dest['numero'],
+                    'operateur_destination_id' => $dest['operateur_id'],
+                    'montant'                  => $montantParPersonne,
+                    'frais'                    => $dest['frais_base'],
+                    'frais_commission_externe' => $dest['commission_externe'],
+                    'frais_retrait_inclus'     => $dest['frais_retrait_inclus'],
+                    'frais_total'              => $dest['frais_total']
+                ]);
+            }
+
             $db->transComplete();
-            
+
             if ($db->transStatus() === false) {
-                throw new \Exception('Erreur lors de la transaction');
+                throw new \Exception('Erreur pendant le traitement du transfert.');
             }
-            
-            $message = 'Transfert de ' . number_format($montant, 2) . ' Ar vers ' . $numeroDestinataire . ' effectué avec succès';
-            if ($frais > 0) {
-                $message .= ' (Frais: ' . number_format($frais, 2) . ' Ar)';
-            }
-            
-            return redirect()->to('/Client')->with('success', $message);
-            
+
+            $msg = $estMultiple 
+                ? 'Transfert multiple de ' . number_format($montantGlobal, 2) . " Ar vers $nombreDestinataires numéros effectué avec succès."
+                : 'Transfert de ' . number_format($montantGlobal, 2) . ' Ar vers ' . $listeNumeros[0] . ' effectué avec succès.';
+
+            return redirect()->to('/Client')->with('success', $msg);
+
         } catch (\Exception $e) {
             $db->transRollback();
-            return redirect()->back()->with('error', 'Erreur lors du transfert : ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Échec du transfert : ' . $e->getMessage());
         }
     }
 

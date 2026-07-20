@@ -8,8 +8,14 @@ class LoginController extends BaseController
 {
     public function index(): string
     {
+        $session = session();
+        if ($session->get('logged_in')) {
+            return redirect()->to('/Client');
+        }
+        
         return view('login');
     }
+
     public function login()
     {
         $clientModel = model('ClientModel');
@@ -17,62 +23,29 @@ class LoginController extends BaseController
         $numero = $this->request->getPost('numero');
         
         if (empty($numero)) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Veuillez saisir votre numéro de téléphone'
-            ]);
+            return redirect()->back()->with('error', 'Veuillez saisir votre numéro de téléphone');
         }
-
+    
         $verification = $clientModel->verifierNumeroClient($numero);
         
         if (!$verification['valid']) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => $verification['message']
-            ]);
+            return redirect()->back()->with('error', $verification['message']);
         }
-
+    
         $session = session();
         $session->set([
-            'client_id' => $verification['client']->id,
-            'client_nom' => $verification['client']->nom,
-            'client_numero' => $verification['client']->numero,
+            'client_id' => $verification['client_id'],
+            'client_nom' => $verification['client_nom'],
+            'client_numero' => $verification['client_numero'],
             'logged_in' => true
         ]);
-
-        return $this->response->setJSON([
-            'success' => true,
-            'message' => 'Connexion réussie',
-            'client' => [
-                'id' => $verification['client']->id,
-                'nom' => $verification['client']->nom,
-                'numero' => $clientModel->formaterNumero($verification['client']->numero),
-                'prefixe' => $verification['prefixe']
-            ]
-        ]);
+    
+        return redirect()->to('/Client')->with('success', 'Connexion réussie');
     }
-
-    public function verifierNumero()
+    public function logout()
     {
-        $clientModel = model('ClientModel');
-        $numero = $this->request->getGet('numero');
-        
-        if (empty($numero)) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Numéro requis'
-            ]);
-        }
-
-        $verification = $clientModel->verifierNumeroClient($numero);
-        
-        return $this->response->setJSON([
-            'success' => $verification['valid'],
-            'message' => $verification['message'],
-            'data' => $verification['valid'] ? [
-                'client' => $verification['client'],
-                'prefixe' => $verification['prefixe']
-            ] : null
-        ]);
+        $session = session();
+        $session->destroy();
+        return redirect()->to('/login')->with('success', 'Vous avez été déconnecté');
     }
 }

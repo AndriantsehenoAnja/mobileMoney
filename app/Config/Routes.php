@@ -13,4 +13,5 @@ $routes->get('/produit/(:num)', 'ProduitController::show/$1');
 $routes->get('/', 'LoginController::index');
 $routes->get('login', 'LoginController::index');
 $routes->post('login/authenticate', 'LoginController::login');
-$routes->get('login/verify', 'LoginController::verifierNumero');
+
+$routes->get('/Client', 'ClientController::index', ['filter' => 'auth']);

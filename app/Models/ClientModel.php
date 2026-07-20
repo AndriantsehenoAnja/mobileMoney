@@ -64,12 +64,15 @@ class ClientModel extends Model
         }
 
         // Tout est valide
+        // Tout est valide
         return [
             'valid' => true,
-            'message' => 'Client valide',
-            'client' => $client,
-            'prefixe' => $prefixeInfo->prefixe
+            'message' => 'Numéro valide',
+            'client_id' => $client->id,
+            'client_nom' => $client->nom,
+            'client_numero' => $client->numero,
         ];
+        
     }
 
     /**

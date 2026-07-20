@@ -7,7 +7,7 @@
 </head>
 <body>
     <a href="/client/profil">Profil</a>
-    <a href="/client/transactions">Transactions</a>
+    <a href="/transfert">Transferts</a>
     <a href="/depot">Depots</a>
     <a href="/retrait">Retraits</a>
     <a href="/deconnexion">Déconnexion</a>

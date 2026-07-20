@@ -20,6 +20,10 @@ $routes->post('/depot/effectuer', 'ClientController::effectuerDepot', ['filter' 
 $routes->get('/retrait', 'ClientController::retrait', ['filter' => 'auth']);
 $routes->post('/retrait/effectuer', 'ClientController::effectuerRetrait', ['filter' => 'auth']);
 
+// Transfert
+$routes->get('transfert', 'ClientController::transfert');
+$routes->get('verifier-destinataire', 'ClientController::verifierDestinataire');
+$routes->post('transfert/effectuer', 'ClientController::effectuerTransfert');
 
 
 $routes->group('prefix', ['namespace' => 'App\Controllers'], function ($routes) {

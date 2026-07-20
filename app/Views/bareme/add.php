@@ -4,7 +4,7 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>➕ Ajouter un nouveau Barème (V2)</h2>
-    <a href="<?= site_url('admin/bareme') ?>" class="btn">🔙 Retour à la liste</a>
+    <a href="<?= site_url('admin/type-operation') ?>" class="btn">🔙 Retour à la liste</a>
 </div>
 
 <form action="<?= site_url('admin/bareme/addbareme') ?>" method="post">

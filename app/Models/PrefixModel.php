@@ -21,7 +21,8 @@ class PrefixModel extends Model
     // Validation
     protected $validationRules      = [
         'prefixe' => 'required|is_unique[prefixes.prefixe]|min_length[2]|max_length[10]',
-        'operateur_id' => 'required|exists[operateurs.id]',
+        // ✅ Correct
+'operateur_id' => 'required|is_not_unique[operateurs.id]',
     ];
     protected $validationMessages   = [
         'prefixe' => [
@@ -66,5 +67,11 @@ class PrefixModel extends Model
                     ->where('prefixes.prefixe', $prefixe)
                     ->where('operateurs.est_notre_operateur', 1)
                     ->first() !== null;
+    }
+
+    public function getPrefixesAvecOperateur(){
+        return $this->select('prefixes.*, operateurs.nom AS nom_operateur, operateurs.commission')
+                    ->join('operateurs', 'operateurs.id = prefixes.operateur_id')
+                    ->findAll();
     }
 }

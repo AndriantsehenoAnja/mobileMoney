@@ -13,10 +13,10 @@ class SituationCompteController extends BaseController
      */
     public function index()
     {
-        $session = session();
-        if (!$session->get('admin_logged_in')) {
-            return redirect()->to('/login/admin');
-        }
+        // $session = session();
+        // if (!$session->get('admin_logged_in')) {
+        //     return redirect()->to('/login/admin');
+        // }
 
         $transactionModel = new TransactionModel();
         $operateurModel   = new OperateurModel();
@@ -36,7 +36,7 @@ class SituationCompteController extends BaseController
         $montantsAEnvoyerParOperateur = $transactionModel->getSituationMontantsParOperateur();
 
         // 5. Total du solde des comptes clients en circulation
-        $soldeTotalClients = $compteModel->selectSum('solde')->first()['solde'] ?? 0;
+        $soldeTotalClients = $compteModel->selectSum('solde')->first()->solde ?? 0;
 
         $data = [
             'title'                        => 'Situation de Compte V2',
@@ -49,7 +49,7 @@ class SituationCompteController extends BaseController
             'soldeTotalClients'            => $soldeTotalClients
         ];
 
-        return view('admin/situation_compte/index', $data);
+        return view('situation_compte/index', $data);
     }
 
     /**
@@ -57,10 +57,10 @@ class SituationCompteController extends BaseController
      */
     public function operateurs()
     {
-        $session = session();
-        if (!$session->get('admin_logged_in')) {
-            return redirect()->to('/login/admin');
-        }
+        // $session = session();
+        // if (!$session->get('admin_logged_in')) {
+        //     return redirect()->to('/login/admin');
+        // }
 
         $transactionModel = new TransactionModel();
 
@@ -76,6 +76,6 @@ class SituationCompteController extends BaseController
             'montantsAEnvoyerParOperateur' => $montantsAEnvoyerParOperateur
         ];
 
-        return view('admin/situation_compte/operateurs', $data);
+        return view('situation_compte/operateurs', $data);
     }
 }

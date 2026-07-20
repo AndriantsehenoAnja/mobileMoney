@@ -1,38 +1,15 @@
-CRITICAL - 2026-07-20 09:41:38 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "/admin/type_operation/index.php"
-[Method: GET, Route: admin/type-operation]
-in SYSTEMPATH/Exceptions/FrameworkException.php on line 39.
- 1 SYSTEMPATH/View/View.php(228): CodeIgniter\Exceptions\FrameworkException::forInvalidFile()
- 2 SYSTEMPATH/Common.php(1250): CodeIgniter\View\View->render()
- 3 APPPATH/Controllers/TypeOperationController.php(13): view()
- 4 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\TypeOperationController->index()
- 5 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
- 6 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
- 7 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
- 8 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
- 9 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
-10 SYSTEMPATH/rewrite.php(44): require_once('/home/itu/Documents/s4/SystemdInformationRojo/github/mobileMoney/public/index.php')
-CRITICAL - 2026-07-20 10:21:07 --> CodeIgniter\Router\Exceptions\RouterException: The namespace delimiter is a backslash (\), not a slash (/). Route handler: "\App\Controllers\<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Bienvenue sur notre application de gestion de comptes</h1>
-    <a href="/loginClient">Se connecter</a>
-    <a href="/admin">dashboard Operateur</a>
-</body>
-</html>
-"
-[Method: GET, Route: /]
-in SYSTEMPATH/Router/Router.php on line 523.
- 1 SYSTEMPATH/Router/Router.php(523): CodeIgniter\Router\Exceptions\RouterException::forInvalidControllerName()
- 2 SYSTEMPATH/Router/Router.php(225): CodeIgniter\Router\Router->checkRoutes()
- 3 SYSTEMPATH/CodeIgniter.php(829): CodeIgniter\Router\Router->handle()
- 4 SYSTEMPATH/CodeIgniter.php(441): CodeIgniter\CodeIgniter->tryToRouteIt()
- 5 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
- 6 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
- 7 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
- 8 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
- 9 SYSTEMPATH/rewrite.php(44): require_once('/home/itu/Documents/s4/SystemdInformationRojo/github/mobileMoney/public/index.php')
+CRITICAL - 2026-07-20 19:52:50 --> CodeIgniter\Validation\Exceptions\ValidationException: "exists" is not a valid rule.
+[Method: POST, Route: admin/prefix/create]
+in SYSTEMPATH/Validation/Validation.php on line 354.
+ 1 SYSTEMPATH/Validation/Validation.php(354): CodeIgniter\Validation\Exceptions\ValidationException::forRuleNotFound()
+ 2 SYSTEMPATH/Validation/Validation.php(210): CodeIgniter\Validation\Validation->processRules()
+ 3 SYSTEMPATH/BaseModel.php(1615): CodeIgniter\Validation\Validation->run()
+ 4 SYSTEMPATH/BaseModel.php(868): CodeIgniter\BaseModel->validate()
+ 5 SYSTEMPATH/Model.php(668): CodeIgniter\BaseModel->insert()
+ 6 APPPATH/Controllers/PrefixController.php(98): CodeIgniter\Model->insert()
+ 7 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\PrefixController->store()
+ 8 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
+ 9 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+10 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+12 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()

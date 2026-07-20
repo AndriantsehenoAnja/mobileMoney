@@ -6,7 +6,7 @@
     <title>Client</title>
 </head>
 <body>
-    <a href="/client/profil">Profil</a>
+    <a href="/historique">Historique</a>
     <a href="/transfert">Transferts</a>
     <a href="/depot">Depots</a>
     <a href="/retrait">Retraits</a>

@@ -25,6 +25,8 @@ $routes->get('transfert', 'ClientController::transfert');
 $routes->get('verifier-destinataire', 'ClientController::verifierDestinataire');
 $routes->post('transfert/effectuer', 'ClientController::effectuerTransfert');
 
+// historique
+$routes->get('historique', 'ClientController::historique');
 
 $routes->group('prefix', ['namespace' => 'App\Controllers'], function ($routes) {
     $routes->get('/', 'PrefixController::index');

@@ -396,4 +396,79 @@ public function transfert()
         }
     }
 
+// Historique
+/**
+ * Afficher l'historique des transactions avec Query Builder
+ */
+public function historique()
+{
+    $session = session();
+    
+    if (!$session->get('logged_in')) {
+        return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
+    }
+    
+    $clientId = $session->get('client_id');
+    
+    $compteModel = new CompteModel();
+    $transactionModel = new TransactionModel();
+    
+    // Récupérer le compte du client
+    $compte = $compteModel->findByClientId($clientId);
+    
+    if (!$compte) {
+        return redirect()->back()->with('error', 'Compte non trouvé');
+    }
+    
+    // Récupérer les transactions avec Query Builder
+    $transactions = $transactionModel
+        ->select('transactions.*, 
+                  types_operations.nom as type_operation,
+                  cl1.numero as numero_source,
+                  cl1.nom as nom_source,
+                  cl2.numero as numero_destination,
+                  cl2.nom as nom_destination')
+        ->join('types_operations', 'types_operations.id = transactions.type_operation_id', 'left')
+        ->join('comptes c1', 'c1.id = transactions.compte_source', 'left')
+        ->join('clients cl1', 'cl1.id = c1.client_id', 'left')
+        ->join('comptes c2', 'c2.id = transactions.compte_destination', 'left')
+        ->join('clients cl2', 'cl2.id = c2.client_id', 'left')
+        ->where('transactions.compte_source', $compte->id)
+        ->orWhere('transactions.compte_destination', $compte->id)
+        ->orderBy('transactions.date_transaction', 'DESC')
+        ->findAll();
+    
+    // Calculer les statistiques
+    $totalDepots = 0;
+    $totalRetraits = 0;
+    $totalTransferts = 0;
+    $totalFrais = 0;
+    
+    foreach ($transactions as $tx) {
+        $totalFrais += $tx->frais ?? 0;
+        
+        if (strtolower($tx->type_operation ?? '') == 'depot') {
+            $totalDepots += $tx->montant;
+        } elseif (strtolower($tx->type_operation ?? '') == 'retrait') {
+            $totalRetraits += $tx->montant;
+        } elseif (strtolower($tx->type_operation ?? '') == 'transfert') {
+            $totalTransferts += $tx->montant;
+        }
+    }
+    
+    $data = [
+        'title' => 'Historique - Mobile Money',
+        'transactions' => $transactions,
+        'compte' => $compte,
+        'solde' => $compte->solde,
+        'total_transactions' => count($transactions),
+        'total_depots' => $totalDepots,
+        'total_retraits' => $totalRetraits,
+        'total_transferts' => $totalTransferts,
+        'total_frais' => $totalFrais
+    ];
+    
+    return view('Client/historique', $data);
+}
+
 }

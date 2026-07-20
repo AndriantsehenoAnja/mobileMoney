@@ -1,6 +1,19 @@
+CREATE TABLE operateurs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nom TEXT NOT NULL UNIQUE,
+    commission NUMERIC DEFAULT 0     -- % supplémentaire pour transfert externe
+);
+
 CREATE TABLE prefixes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     prefixe TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE prefixesOperateurExterne(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    operateur_id INTEGER,
+    prefixe TEXT UNIQUE NOT NULL,
+    FOREIGN KEY(operateur_id) REFERENCES operateurs(id)
 );
 
 CREATE TABLE clients (
@@ -41,9 +54,32 @@ CREATE TABLE transactions (
     montant NUMERIC,
     frais NUMERIC,
     date_transaction DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    -- NOUVEAU CHAMP POUR ENVOI MULTIPLE
+    groupe_transfert_id INTEGER DEFAULT NULL,  -- NULL si transfert simple
+    
+    -- AUTRES CHAMPS V2
+    frais_inclus INTEGER DEFAULT 0,
+    operateur_destination_id INTEGER DEFAULT NULL,
+    commission_inter_operateur NUMERIC DEFAULT 0,
+    est_inter_operateur INTEGER DEFAULT 0,
+    
     FOREIGN KEY(type_operation_id) REFERENCES types_operations(id),
     FOREIGN KEY(compte_source) REFERENCES comptes(id),
-    FOREIGN KEY(compte_destination) REFERENCES comptes(id)
+    FOREIGN KEY(compte_destination) REFERENCES comptes(id),
+    FOREIGN KEY(groupe_transfert_id) REFERENCES groupes_transferts(id),
+    FOREIGN KEY(operateur_destination_id) REFERENCES operateurs(id)
+);
+
+CREATE TABLE groupes_transferts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    compte_source INTEGER NOT NULL,          -- Compte de l'expéditeur
+    montant_total NUMERIC NOT NULL,          -- Montant total envoyé
+    nombre_destinataires INTEGER NOT NULL,   -- Nombre de destinataires
+    frais_total NUMERIC DEFAULT 0,           -- Frais totaux prélevés
+    commission_total NUMERIC DEFAULT 0,      -- Commission inter-opérateur totale
+    date_transfert DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(compte_source) REFERENCES comptes(id)
 );
 
 -- 1. Insertion des préfixes téléphoniques
@@ -102,3 +138,5 @@ INSERT INTO transactions (type_operation_id, compte_source, compte_destination, 
 
 -- Exemple 3 : Alice (compte 2) effectue un retrait de 5 000. Frais de 100.
 (2, 2, NULL, 5000.00, 100.00);
+
+

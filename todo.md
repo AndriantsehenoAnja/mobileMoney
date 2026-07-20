@@ -1,13 +1,13 @@
 # To do list
 
-[] Anja|00h00|Création du projet CodeIgniter + configuration SQLite + import base.sql|app/Config/*, base.sql 
-[] Anja|00h00|Créer les modèles PrefixModel, TypeOperationModel, BaremeFraisModel|app/Models/*
-[] Anja|00h00|Développer la gestion des préfixes (liste, ajout, modification, suppression)|Admin/PrefixController.php, admin/prefixes/*
-[] Anja|00h00|Développer la gestion des types d'opérations|Admin/TypeOperationController.php, admin/types/*
-[] Anja|00h00|Développer la gestion des barèmes de frais|Admin/BaremeController.php, admin/baremes/*
-[] Anja|00h00|Développer la situation des comptes clients|Admin/CompteController.php, admin/comptes/index.php
-[] Anja|00h00|Développer la situation des gains (somme des frais retrait/transfert)|Admin/GainController.php, admin/gains/index.php
-[] Anja|00h00|Créer le menu administrateur (/admin)|Routes.php, admin/layout.php
+[x] Anja|00h00|Création du projet CodeIgniter + configuration SQLite + import base.sql|app/Config/*, base.sql|09:30 
+[x] Anja|00h00|Créer les modèles PrefixModel, TypeOperationModel, BaremeFraisModel|app/Models/*|10:00
+[x] Anja|00h00|Développer la gestion des préfixes (liste, ajout, modification, suppression)|Admin/PrefixController.php, admin/prefixes/*|11:00
+[x] Anja|00h00|Développer la gestion des types d'opérations|Admin/TypeOperationController.php, admin/types/*|12:00
+[x] Anja|00h00|Développer la gestion des barèmes de frais|Admin/BaremeController.php, admin/baremes/*|13:30
+[] Anja|00h00|Développer la situation des comptes clients|Admin/CompteController.php, admin/comptes/index.php|14:30
+[] Anja|00h00|Développer la situation des gains (somme des frais retrait/transfert)|Admin/GainController.php, admin/gains/index.php|16:00
+[] Anja|00h00|Créer le menu administrateur (/admin)|Routes.php, admin/layout.php|16:30
 
 
 [x] Bryan|00h00|Créer les modèles ClientModel, CompteModel, TransactionModel|app/Models/*

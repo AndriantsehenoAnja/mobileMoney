@@ -2,39 +2,54 @@
 
 namespace App\Controllers;
 
+use App\Models\ClientModel;
 use App\Models\CompteModel;
 use App\Models\TransactionModel;
+use App\Models\OperateurModel;
 
 class AdminController extends BaseController
 {
+    /**
+     * Dashboard Administrateur / Opérateur (V2)
+     */
     public function index()
     {
-        $compteModel = new CompteModel();
-        $transactionModel = new TransactionModel();
-
-        // 1. Récupération des indicateurs globaux
-        $masseMonetaire = $compteModel->getSoldeTotal();
-        $nombreComptes   = $compteModel->countComptes();
-        
-        // 2. Calcul des gains totaux
-        $gainsParType = $transactionModel->getGainTotalParType();
-        $gainGlobal = 0;
-        foreach ($gainsParType as $gain) {
-            $gainGlobal += $gain->total_gain;
+        $session = session();
+        if (!$session->get('admin_logged_in')) {
+            return redirect()->to('/login/admin');
         }
 
-        // 3. Récupérer les dernières transactions (à ajouter dans votre TransactionModel si besoin)
-        $dernieresTransactions = $transactionModel->select('transactions.*, types_operations.nom as type_nom')
-                                                 ->join('types_operations', 'types_operations.id = transactions.type_operation_id')
-                                                 ->orderBy('transactions.id', 'DESC')
-                                                 ->findAll(5); // Limité aux 5 dernières
+        $clientModel      = new ClientModel();
+        $compteModel      = new CompteModel();
+        $transactionModel = new TransactionModel();
+        $operateurModel   = new OperateurModel();
 
-        // Envoi de toutes les statistiques à la vue
-        return view('admin/dashboard', [
-            'masseMonetaire' => $masseMonetaire,
-            'nombreComptes'   => $nombreComptes,
-            'gainGlobal'     => $gainGlobal,
-            'dernieresTransactions' => $dernieresTransactions
-        ]);
+        // Statistiques générales
+        $totalClients      = $clientModel->countAll();
+        $totalComptes      = $compteModel->countAll();
+        $soldeTotalClients = $compteModel->selectSum('solde')->first()['solde'] ?? 0;
+
+        // V2 : Gains ventilés (Notre opérateur vs Autres)
+        $gainsVentiles = $transactionModel->getGainTotalVentile();
+        
+        // V2 : Total cumulé des montants dus/à envoyer aux opérateurs tiers
+        $totalAEnvoyerOperateurs = $transactionModel->getMontantTotalAEnvoyerAuxOperateurs();
+
+        // Dernières transactions récentes
+        $recentTransactions = $transactionModel->getTransactionsAvecDetails(10);
+
+        $data = [
+            'title'                   => 'Tableau de Bord - Administration',
+            'page_title'              => 'Tableau de bord V2',
+            'current_page'            => 'dashboard',
+            'totalClients'            => $totalClients,
+            'totalComptes'            => $totalComptes,
+            'soldeTotalClients'       => $soldeTotalClients,
+            'gainsVentiles'           => $gainsVentiles,
+            'totalAEnvoyerOperateurs' => $totalAEnvoyerOperateurs,
+            'recentTransactions'      => $recentTransactions
+        ];
+
+        return view('admin/dashboard', $data);
     }
 }

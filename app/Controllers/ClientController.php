@@ -7,6 +7,7 @@ use App\Models\CompteModel;
 use App\Models\TransactionModel;
 use App\Models\TypeOperationModel;
 use App\Models\BaremeFraisModel;
+use App\Models\OperateurModel;
 
 class ClientController extends BaseController
 {
@@ -122,69 +123,6 @@ class ClientController extends BaseController
     }
 
     /**
-     * Traiter le dépôt
-     */
-    public function effectuerDepot()
-    {
-        $session = session();
-        
-        if (!$session->get('logged_in')) {
-            return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
-        }
-        
-        $clientId = $session->get('client_id');
-        $montant = $this->request->getPost('montant');
-        
-        if (empty($montant) || !is_numeric($montant) || $montant <= 0) {
-            return redirect()->back()->with('error', 'Veuillez saisir un montant valide');
-        }
-        
-        $montant = (float) $montant;
-        
-        if ($montant < 100) {
-            return redirect()->back()->with('error', 'Le montant minimum de dépôt est de 100 Ar');
-        }
-        
-        $compteModel = new CompteModel();
-        $transactionModel = new TransactionModel();
-        $typeOperationModel = new TypeOperationModel();
-        
-        $compte = $compteModel->findByClientId($clientId);
-        
-        if (!$compte) {
-            return redirect()->back()->with('error', 'Compte non trouvé');
-        }
-        
-        $typeDepot = $typeOperationModel->where('nom', 'Depot')->first();
-        
-        if (!$typeDepot) {
-            return redirect()->back()->with('error', 'Type d\'opération non configuré');
-        }
-        
-        $db = \Config\Database::connect();
-        $db->transStart();
-        
-        $compteModel->crediter($compte->id, $montant);
-        
-        $transactionModel->insert([
-            'type_operation_id' => $typeDepot['id'],
-            'compte_source' => null,
-            'compte_destination' => $compte->id,
-            'montant' => $montant,
-            'frais' => 0
-        ]);
-        
-        $db->transComplete();
-        
-        if ($db->transStatus() === false) {
-            $db->transRollback();
-            return redirect()->back()->with('error', 'Erreur lors du dépôt');
-        }
-        
-        return redirect()->to('/Client')->with('success', 'Dépôt de ' . number_format($montant, 2) . ' Ar effectué avec succès');
-    }
-
-    /**
      * Formulaire de retrait
      */
     public function retrait()
@@ -214,9 +152,75 @@ class ClientController extends BaseController
         return view('Client/retrait', $data);
     }
 
-    /**
-     * Traiter le retrait
-     */
+    public function effectuerDepot()
+    {
+        $session = session();
+        
+        if (!$session->get('logged_in')) {
+            return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
+        }
+        
+        $clientId = $session->get('client_id');
+        $montant = $this->request->getPost('montant');
+        
+        if (empty($montant) || !is_numeric($montant) || $montant <= 0) {
+            return redirect()->back()->with('error', 'Veuillez saisir un montant valide');
+        }
+        
+        $montant = (float) $montant;
+        
+        if ($montant < 100) {
+            return redirect()->back()->with('error', 'Le montant minimum de dépôt est de 100 Ar');
+        }
+        
+        $compteModel = new CompteModel();
+        $transactionModel = new TransactionModel();
+        $typeOperationModel = new TypeOperationModel();
+        $clientModel = new ClientModel();
+        
+        $compte = $compteModel->findByClientId($clientId);
+        if (!$compte) {
+            return redirect()->back()->with('error', 'Compte non trouvé');
+        }
+    
+        $client = $clientModel->find($clientId);
+        
+        // Récupération du type d'opération "Depot"
+        $typeDepot = $typeOperationModel->where('nom', 'Depot')->first();
+        if (!$typeDepot) {
+            return redirect()->back()->with('error', 'Type d\'opération non configuré');
+        }
+        
+        $db = \Config\Database::connect();
+        $db->transStart();
+        
+        // Créditer le compte du client
+        $compteModel->crediter($compte->id, $montant);
+        
+        // Insertion compatible V2
+        $transactionModel->insert([
+            'type_operation_id'        => $typeDepot['id'],
+            'compte_source'            => null,
+            'compte_destination'       => $compte->id,
+            'numero_destination'       => $client->numero ?? null,
+            'operateur_destination_id' => $client->operateur_id ?? 1, // Opérateur interne
+            'montant'                  => $montant,
+            'frais_base'               => 0,
+            'frais_commission_externe' => 0,
+            'frais_retrait_inclus'     => 0,
+            'frais_total'              => 0,
+            'date_transaction'         => date('Y-m-d H:i:s')
+        ]);
+        
+        $db->transComplete();
+        
+        if ($db->transStatus() === false) {
+            return redirect()->back()->with('error', 'Erreur lors de l\'enregistrement du dépôt');
+        }
+        
+        return redirect()->to('/client')->with('success', 'Dépôt de ' . number_format($montant, 2, ',', ' ') . ' Ar effectué avec succès');
+    }
+    
     public function effectuerRetrait()
     {
         $session = session();
@@ -242,52 +246,68 @@ class ClientController extends BaseController
         $transactionModel = new TransactionModel();
         $typeOperationModel = new TypeOperationModel();
         $baremeFraisModel = new BaremeFraisModel();
+        $clientModel = new ClientModel();
         
         $compte = $compteModel->findByClientId($clientId);
-        
         if (!$compte) {
             return redirect()->back()->with('error', 'Compte non trouvé');
         }
+    
+        $client = $clientModel->find($clientId);
         
         $typeRetrait = $typeOperationModel->where('nom', 'Retrait')->first();
-        
         if (!$typeRetrait) {
             return redirect()->back()->with('error', 'Type d\'opération non configuré');
         }
         
+        // Calcul des frais selon le barème
         $frais = $baremeFraisModel->calculerFrais($typeRetrait['id'], $montant);
+        
+        // Vérification de l'existence d'un barème configuré pour ce montant
+        if ($frais === null) {
+            return redirect()->back()->with('error', 'Aucun barème de frais configuré pour ce montant.');
+        }
+    
         $montantTotal = $montant + $frais;
         
+        // Vérification du solde (Montant + Frais)
         if ($compte->solde < $montantTotal) {
-            return redirect()->back()->with('error', 'Solde insuffisant. Solde disponible : ' . number_format($compte->solde, 2) . ' Ar');
+            return redirect()->back()->with('error', 'Solde insuffisant. Requis : ' . number_format($montantTotal, 2, ',', ' ') . ' Ar (Dont frais : ' . number_format($frais, 2, ',', ' ') . ' Ar)');
         }
         
         $db = \Config\Database::connect();
         $db->transStart();
         
+        // Débiter le compte du montant total (Montant + Frais)
         $compteModel->debiter($compte->id, $montantTotal);
         
+        // Insertion compatible V2
         $transactionModel->insert([
-            'type_operation_id' => $typeRetrait['id'],
-            'compte_source' => $compte->id,
-            'compte_destination' => null,
-            'montant' => $montant,
-            'frais' => $frais
+            'type_operation_id'        => $typeRetrait['id'],
+            'compte_source'            => $compte->id,
+            'compte_destination'       => null,
+            'numero_destination'       => $client->numero ?? null,
+            'operateur_destination_id' => $client->operateur_id ?? 1,
+            'montant'                  => $montant,
+            'frais_base'               => $frais,
+            'frais_commission_externe' => 0,
+            'frais_retrait_inclus'     => 0,
+            'frais_total'              => $frais,
+            'date_transaction'         => date('Y-m-d H:i:s')
         ]);
         
         $db->transComplete();
         
         if ($db->transStatus() === false) {
-            $db->transRollback();
-            return redirect()->back()->with('error', 'Erreur lors du retrait');
+            return redirect()->back()->with('error', 'Erreur lors de l\'enregistrement du retrait');
         }
         
-        $message = 'Retrait de ' . number_format($montant, 2) . ' Ar effectué avec succès';
+        $message = 'Retrait de ' . number_format($montant, 2, ',', ' ') . ' Ar effectué avec succès';
         if ($frais > 0) {
-            $message .= ' (Frais: ' . number_format($frais, 2) . ' Ar)';
+            $message .= ' (Frais retenus : ' . number_format($frais, 2, ',', ' ') . ' Ar)';
         }
         
-        return redirect()->to('/Client')->with('success', $message);
+        return redirect()->to('/client')->with('success', $message);
     }
 
     /**

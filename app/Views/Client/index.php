@@ -1,4 +1,4 @@
-<?= $this->extend('layout/main') ?>
+<?= $this->extend('Client/layout/main') ?>
 
 <?= $this->section('content') ?>
 
@@ -89,21 +89,29 @@
                     <tbody>
                         <?php foreach($transactions as $tx): ?>
                             <?php 
-                                $isDebit = ($tx->compte_source == $compte->id);
-                                $totalTx = ($isDebit) ? -($tx->montant + $tx->frais) : $tx->montant;
+                                // 1. Récupération des frais selon la V2 (frais_total ou cumul)
+                                $frais = $tx->frais_total ?? (($tx->frais_base ?? 0) + ($tx->frais_commission_externe ?? 0));
+
+                                // 2. Vérification si le compte actuel est l'expéditeur (débit)
+                                $isDebit = isset($compte->id) && ($tx->compte_source == $compte->id);
+
+                                // 3. Calcul du total débité ou crédité
+                                $totalTx = ($isDebit) ? -($tx->montant + $frais) : $tx->montant;
+
+                                // 4. Couleur et signe de l'affichage
                                 $classColor = ($totalTx > 0) ? 'amount-positive' : (($totalTx < 0) ? 'amount-negative' : 'amount-neutral');
                                 $signe = ($totalTx > 0) ? '+' : '';
                             ?>
                             <tr>
-                                <td><?= date('d/m/Y H:i', strtotime($tx->date_transaction)) ?></td>
+                                <td><?= date('d/m/Y H:i', strtotime($tx->date_transaction ?? 'now')) ?></td>
                                 <td>
-                                    <span class="badge badge-<?= strtolower($tx->type_operation ?? 'depot') ?>">
-                                        <?= $tx->type_operation ?? 'Inconnu' ?>
+                                    <span class="badge badge-<?= strtolower($tx->type_operation ?? $tx->type_nom ?? 'depot') ?>">
+                                        <?= esc($tx->type_operation ?? $tx->type_nom ?? 'Opération') ?>
                                     </span>
                                 </td>
-                                <td><?= number_format($tx->montant, 2) ?> Ar</td>
+                                <td><?= number_format($tx->montant, 2, ',', ' ') ?> Ar</td>
                                 <td class="<?= $classColor ?>">
-                                    <?= $signe ?><?= number_format(abs($totalTx), 2) ?> Ar
+                                    <?= $signe ?><?= number_format($totalTx, 2, ',', ' ') ?> Ar
                                 </td>
                             </tr>
                         <?php endforeach; ?>

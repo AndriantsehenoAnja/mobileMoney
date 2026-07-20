@@ -43,7 +43,7 @@ class LoginController extends BaseController
             'logged_in' => true
         ]);
 
-        return redirect()->to('/Client')->with('success', 'Connexion réussie');
+        return redirect()->to('/client')->with('success', 'Connexion réussie');
     }
 
     public function logout()

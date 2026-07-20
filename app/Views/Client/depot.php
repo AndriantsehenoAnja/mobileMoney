@@ -1,4 +1,4 @@
-<?= $this->extend('layout/main') ?>
+<?= $this->extend('Client/layout/main') ?>
 
 <?= $this->section('content') ?>
 

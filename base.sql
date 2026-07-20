@@ -1,6 +1,15 @@
+CREATE TABLE operateurs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nom VARCHAR(50) NOT NULL,
+    commission NUMERIC DEFAULT 0, 
+    est_notre_operateur INTEGER DEFAULT 0 
+);
+
 CREATE TABLE prefixes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    prefixe TEXT UNIQUE NOT NULL
+    prefixe TEXT UNIQUE NOT NULL,
+    operateur_id INTEGER NOT NULL,
+    FOREIGN KEY(operateur_id) REFERENCES operateurs(id)
 );
 
 CREATE TABLE clients (
@@ -37,68 +46,17 @@ CREATE TABLE transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type_operation_id INTEGER,
     compte_source INTEGER,
-    compte_destination INTEGER,
+    compte_destination INTEGER NULL, -- NULL si numéro externe
+    numero_destination TEXT NULL,     -- Utile pour l'envoi vers un autre opérateur
+    operateur_destination_id INTEGER NULL, -- Pour la situation des montants par opérateur
     montant NUMERIC,
-    frais NUMERIC,
+    frais_base NUMERIC DEFAULT 0,
+    frais_commission_externe NUMERIC DEFAULT 0,
+    frais_retrait_inclus NUMERIC DEFAULT 0,
+    frais_total NUMERIC,
     date_transaction DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(type_operation_id) REFERENCES types_operations(id),
     FOREIGN KEY(compte_source) REFERENCES comptes(id),
-    FOREIGN KEY(compte_destination) REFERENCES comptes(id)
+    FOREIGN KEY(compte_destination) REFERENCES comptes(id),
+    FOREIGN KEY(operateur_destination_id) REFERENCES operateurs(id)
 );
-
--- 1. Insertion des préfixes téléphoniques
-INSERT INTO prefixes (prefixe) VALUES 
-('032'), -- Exemple Opérateur A
-('033'), -- Exemple Opérateur B
-('034'), -- Exemple Opérateur C
-('036');    -- International / Autre
-
--- 2. Insertion des types d'opérations fondamentales
-INSERT INTO types_operations (nom) VALUES 
-('Depot'),
-('Retrait'),
-('Transfert');
-
--- 3. Insertion des clients de test
--- (Associez bien les numéros aux préfixes logiques pour le réalisme)
-INSERT INTO clients (nom, numero, prefixe_id) VALUES 
-('Jean Dupont', '0321122334', 1),
-('Alice Ranoro', '0345566778', 3),
-('Marc Smith', '0339988776', 2),
-('Fanja Rakoto', '0324455667', 1);
-
--- 4. Création des comptes (Liés aux clients par client_id)
--- Note : Les soldes sont ici au format NUMERIC. Si vous passez en centimes plus tard, multipliez par 100.
-INSERT INTO comptes (client_id, solde) VALUES 
-(1, 150000.00), -- Compte de Jean
-(2, 25000.50),  -- Compte d'Alice
-(3, 0.00),      -- Compte de Marc (Vide)
-(4, 500000.00); -- Compte de Fanja
-
--- 5. Configuration des barèmes de frais (Exemples)
--- Pour les Dépôts (type_operation_id = 1) : Généralement gratuit (0)
-INSERT INTO baremes_frais (type_operation_id, montant_min, montant_max, frais) VALUES 
-(1, 0.00, 1000000.00, 0.00);
-
--- Pour les Retraits (type_operation_id = 2) : Frais progressifs ou fixes
-INSERT INTO baremes_frais (type_operation_id, montant_min, montant_max, frais) VALUES 
-(2, 100.00, 5000.00, 100.00),
-(2, 5001.00, 20000.00, 300.00),
-(2, 20001.00, 100000.00, 800.00),
-(2, 100001.00, 500000.00, 1500.00);
-
--- Pour les Transferts (type_operation_id = 3) : Frais souvent fixes ou % légers
-INSERT INTO baremes_frais (type_operation_id, montant_min, montant_max, frais) VALUES 
-(3, 100.00, 10000.00, 50.00),
-(3, 10001.00, 500000.00, 200.00);
-
--- 6. Insertion de transactions passées (Historique de test)
-INSERT INTO transactions (type_operation_id, compte_source, compte_destination, montant, frais) VALUES 
--- Exemple 1 : Jean (compte 1) dépose de l'argent sur son propre compte (Pas de destination externe, frais 0)
-(1, NULL, 1, 50000.00, 0.00),
-
--- Exemple 2 : Fanja (compte 4) transfère à Alice (compte 2) un montant de 15 000. Frais de 200 appliqué au source.
-(3, 4, 2, 15000.00, 200.00),
-
--- Exemple 3 : Alice (compte 2) effectue un retrait de 5 000. Frais de 100.
-(2, 2, NULL, 5000.00, 100.00);

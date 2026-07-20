@@ -1,11 +1,3 @@
-create database mobileMoney;
-use mobileMoney;
-
--- CREATE TABLE operateurs (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     username TEXT UNIQUE,
---     password TEXT
--- );
 
 CREATE TABLE prefixes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

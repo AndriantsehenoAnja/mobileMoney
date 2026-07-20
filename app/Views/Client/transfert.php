@@ -2,9 +2,9 @@
 
 <?= $this->section('content') ?>
 
-<div class="card" style="max-width: 600px; margin: 0 auto;">
+<div class="card" style="max-width: 650px; margin: 0 auto;">
     <div class="card-header">
-        <i class="fas fa-exchange-alt text-primary"></i> Effectuer un transfert
+        <i class="fas fa-exchange-alt text-primary"></i> Effectuer un transfert (Simple ou Multiple)
     </div>
     <div class="card-body">
         <div class="alert alert-info">
@@ -12,152 +12,114 @@
             <br>
             <strong>📱 Votre numéro :</strong> <?= $client->numero ?? '' ?>
         </div>
+        
         <div class="alert alert-warning">
-            <i class="fas fa-info-circle"></i> Des frais peuvent s'appliquer selon le montant
+            <i class="fas fa-info-circle"></i> 
+            <strong>Note V2 :</strong> Pour envoyer vers <strong>plusieurs numéros</strong>, séparez-les par des espaces ou virgules. L'envoi multiple est réservé aux numéros de <strong>notre réseau</strong>.
         </div>
 
         <form action="/transfert/effectuer" method="POST" id="transfertForm">
             <?= csrf_field() ?>
             
-            <div class="form-group">
-                <label for="numero_destinataire"><i class="fas fa-phone"></i> Numéro du destinataire</label>
-                <input type="text" 
+            <!-- Champ numéros destinataires -->
+            <div class="form-group mb-3">
+                <label for="numeros_destinataires" class="form-label">
+                    <i class="fas fa-phone"></i> Numéro(s) du/des destinataire(s)
+                </label>
+                <textarea 
                        class="form-control" 
-                       id="numero_destinataire" 
-                       name="numero_destinataire" 
-                       placeholder="0325610052" 
-                       maxlength="10"
-                       value="<?= old('numero_destinataire') ?>"
-                       required>
-                <div class="form-text">Entrez le numéro à 10 chiffres du destinataire</div>
-                
-                <div id="loadingMessage" style="color: #3498db; display: none;">⏳ Vérification du destinataire...</div>
-                <div id="infoDestinataire" style="background: #e8f5e9; padding: 10px; border-left: 4px solid #27ae60; margin: 10px 0; display: none;">
-                    ✅ Destinataire : <strong id="nomDestinataire"></strong> (<span id="numeroDestinataire"></span>)
-                </div>
-                <div id="errorDestinataire" style="background: #fde8e8; padding: 10px; border-left: 4px solid #e74c3c; margin: 10px 0; display: none; color: #c0392b;">
-                    ❌ <span id="messageErreur"></span>
+                       id="numeros_destinataires" 
+                       name="numeros_destinataires" 
+                       rows="2"
+                       placeholder="Ex simple: 0341234567 &#10;Ex multiple: 0341234567, 0349876543" 
+                       required><?= old('numeros_destinataires') ?></textarea>
+                <div class="form-text">Entrez un ou plusieurs numéros à 10 chiffres.</div>
+            </div>
+
+            <!-- Option V2 : Inclure les frais de retrait -->
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="inclure_frais_retrait" name="inclure_frais_retrait" value="1">
+                <label class="form-check-label fw-bold" for="inclure_frais_retrait">
+                    <i class="fas fa-hand-holding-usd text-success"></i> Inclure les frais de retrait lors de l'envoi
+                </label>
+                <div class="form-text text-muted">
+                    Le destinataire recevra le montant exact + les frais nécessaires pour qu'il puisse retirer sans frais (Valable pour notre réseau uniquement).
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="montant"><i class="fas fa-coins"></i> Montant à transférer</label>
+            <!-- Champ Montant -->
+            <div class="form-group mb-3">
+                <label for="montant" class="form-label"><i class="fas fa-coins"></i> Montant total à transférer</label>
                 <input type="number" 
                        class="form-control form-control-lg" 
                        id="montant" 
                        name="montant" 
-                       placeholder="Ex: 5000" 
+                       placeholder="Ex: 10000" 
                        min="100"
                        step="100"
                        value="<?= old('montant') ?>"
                        required>
-                <div class="form-text">Montant minimum : 100 Ar</div>
+                <div class="form-text">Si vous saisissez plusieurs numéros, le montant sera divisé équitablement.</div>
             </div>
 
-            <div class="quick-amounts">
-                <button type="button" class="quick-amount-btn" onclick="setMontant(500)">500 Ar</button>
-                <button type="button" class="quick-amount-btn" onclick="setMontant(1000)">1 000 Ar</button>
-                <button type="button" class="quick-amount-btn" onclick="setMontant(5000)">5 000 Ar</button>
-                <button type="button" class="quick-amount-btn" onclick="setMontant(10000)">10 000 Ar</button>
-                <button type="button" class="quick-amount-btn" onclick="setMontant(25000)">25 000 Ar</button>
-                <button type="button" class="quick-amount-btn" onclick="setMontant(50000)">50 000 Ar</button>
+            <!-- Boutons de montant rapide -->
+            <div class="quick-amounts mb-3">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setMontant(1000)">1 000 Ar</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setMontant(5000)">5 000 Ar</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setMontant(10000)">10 000 Ar</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setMontant(25000)">25 000 Ar</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="setMontant(50000)">50 000 Ar</button>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block" id="transfertBtn">
-                <i class="fas fa-exchange-alt"></i> Effectuer le transfert
+            <button type="submit" class="btn btn-primary w-100 btn-lg" id="transfertBtn">
+                <i class="fas fa-paper-plane"></i> Confirmer le transfert
             </button>
         </form>
     </div>
 </div>
 
 <script>
-    const numeroInput = document.getElementById('numero_destinataire');
-    let timeoutId = null;
-    let destinataireValide = false;
-
     function setMontant(montant) {
         document.getElementById('montant').value = montant;
     }
 
-    numeroInput.addEventListener('input', function() {
-        const numero = this.value.replace(/\D/g, '');
-        this.value = numero;
-        
-        document.getElementById('infoDestinataire').style.display = 'none';
-        document.getElementById('errorDestinataire').style.display = 'none';
-        document.getElementById('loadingMessage').style.display = 'none';
-        destinataireValide = false;
-        
-        if (timeoutId) clearTimeout(timeoutId);
-        
-        if (numero.length === 10) {
-            timeoutId = setTimeout(function() {
-                verifierDestinataire(numero);
-            }, 300);
-        }
-    });
-
-    function verifierDestinataire(numero) {
-        document.getElementById('loadingMessage').style.display = 'block';
-        
-        fetch('/verifier-destinataire?numero=' + encodeURIComponent(numero))
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('loadingMessage').style.display = 'none';
-                
-                if (data.success) {
-                    document.getElementById('nomDestinataire').textContent = data.client.nom;
-                    document.getElementById('numeroDestinataire').textContent = data.client.numero;
-                    document.getElementById('infoDestinataire').style.display = 'block';
-                    destinataireValide = true;
-                } else {
-                    document.getElementById('messageErreur').textContent = data.message;
-                    document.getElementById('errorDestinataire').style.display = 'block';
-                    destinataireValide = false;
-                }
-            })
-            .catch(error => {
-                document.getElementById('loadingMessage').style.display = 'none';
-                document.getElementById('messageErreur').textContent = 'Erreur de connexion';
-                document.getElementById('errorDestinataire').style.display = 'block';
-                destinataireValide = false;
-            });
-    }
-
     document.getElementById('transfertForm').addEventListener('submit', function(e) {
-        const numero = document.getElementById('numero_destinataire').value;
+        const inputNumeros = document.getElementById('numeros_destinataires').value.trim();
         const montant = parseFloat(document.getElementById('montant').value);
         const solde = <?= $solde ?? 0 ?>;
         
-        if (numero.length !== 10) {
+        // Extraction des numéros
+        const listeNumeros = inputNumeros.split(/[\s,;]+/).filter(Boolean);
+        
+        if (listeNumeros.length === 0) {
             e.preventDefault();
-            alert('❌ Veuillez saisir un numéro de destinataire valide (10 chiffres)');
+            alert('❌ Veuillez saisir au moins un numéro destinataire.');
             return false;
         }
-        
-        if (!destinataireValide) {
-            e.preventDefault();
-            alert('❌ Destinataire non valide. Veuillez vérifier le numéro.');
-            return false;
-        }
-        
+
         if (isNaN(montant) || montant < 100) {
             e.preventDefault();
-            alert('❌ Veuillez saisir un montant valide (minimum 100 Ar)');
+            alert('❌ Veuillez saisir un montant valide (minimum 100 Ar).');
             return false;
         }
-        
+
         if (montant > solde) {
             e.preventDefault();
-            alert('❌ Solde insuffisant. Solde disponible : ' + solde.toLocaleString() + ' Ar');
+            alert('❌ Solde insuffisant pour couvrir le montant saisi.');
             return false;
         }
-        
-        if (!confirm(`Confirmer le transfert de ${montant.toLocaleString()} Ar vers le numéro ${numero} ?`)) {
+
+        let messageConfirmation = `Confirmer le transfert d'un montant global de ${montant.toLocaleString()} Ar vers ${listeNumeros.length} destinataire(s) ?`;
+        if (listeNumeros.length > 1) {
+            const parPersonne = montant / listeNumeros.length;
+            messageConfirmation += `\n(Chaque destinataire recevra ${parPersonne.toLocaleString()} Ar)`;
+        }
+
+        if (!confirm(messageConfirmation)) {
             e.preventDefault();
             return false;
         }
-        
+
         document.getElementById('transfertBtn').disabled = true;
         document.getElementById('transfertBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement en cours...';
     });

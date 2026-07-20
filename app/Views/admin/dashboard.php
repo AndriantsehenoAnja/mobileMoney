@@ -1,75 +1,110 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <?= $this->extend('admin/layout') ?>
+<?= $this->extend('admin/layout') ?>
 
 <?= $this->section('content') ?>
-        <h2>Tableau de Bord Administrateur</h2>
-        <p style="color: #7f8c8d;">Statistiques globales en temps réel du système Mobile Money.</p>
-    
-        <!-- Grille des indicateurs (Cards) -->
-        <style>
-            .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 20px; margin-bottom: 40px; }
-            .card-stat { padding: 20px; border-radius: 8px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-            .bg-blue { background-color: #3498db; }
-            .bg-green { background-color: #2ecc71; }
-            .bg-purple { background-color: #9b59b6; }
-            .stat-val { font-size: 24px; font-weight: bold; margin-top: 10px; }
-            .table-recent { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            .table-recent th, .table-recent td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-            .table-recent th { background-color: #f4f6f7; }
-        </style>
-    
-        <div class="grid-stats">
-            <div class="card-stat bg-blue">
-                <div>Masse Monétaire Globale</div>
-                <div class="stat-val"><?= number_format($masseMonetaire, 2, ',', ' ') ?> AR</div>
-            </div>
-            
-            <div class="card-stat bg-green">
-                <div>Gains de la Plateforme</div>
-                <div class="stat-val"><?= number_format($gainGlobal, 2, ',', ' ') ?> AR</div>
-            </div>
-    
-            <div class="card-stat bg-purple">
-                <div>Comptes Actifs</div>
-                <div class="stat-val"><?= $nombreComptes ?></div>
-            </div>
+
+    <style>
+        .grid-stats { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+            gap: 20px; 
+            margin-top: 15px; 
+            margin-bottom: 30px; 
+        }
+        .card-stat { 
+            padding: 20px; 
+            border-radius: 8px; 
+            color: white; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08); 
+        }
+        .bg-blue { background-color: #2563eb; }
+        .bg-green { background-color: #16a34a; }
+        .bg-purple { background-color: #9333ea; }
+        .bg-orange { background-color: #ea580c; }
+        
+        .stat-val { 
+            font-size: 22px; 
+            font-weight: bold; 
+            margin-top: 8px; 
+        }
+        .stat-sub {
+            font-size: 11px;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+    </style>
+
+    <h2>Aperçu général de l'activité (V2)</h2>
+    <p style="color: #6b7280; font-size: 14px;">Indicateurs clés du réseau et situation des opérations tiers.</p>
+
+    <!-- Grille des cartes statistiques V2 -->
+    <div class="grid-stats">
+        <div class="card-stat bg-blue">
+            <div>Solde Total Clients</div>
+            <div class="stat-val"><?= number_format($soldeTotalClients ?? 0, 2, ',', ' ') ?> AR</div>
+            <div class="stat-sub">Masse monétaire en circulation</div>
         </div>
-    
-        <!-- Section des activités récentes -->
-        <h3>Flux des 5 dernières transactions</h3>
-        <?php if (!empty($dernieresTransactions)): ?>
-            <table class="table-recent">
-                <thead>
+        
+        <div class="card-stat bg-green">
+            <div>Gains Notre Réseau</div>
+            <div class="stat-val"><?= number_format($gainsVentiles['interne'] ?? 0, 2, ',', ' ') ?> AR</div>
+            <div class="stat-sub">Frais réseau local</div>
+        </div>
+
+        <div class="card-stat bg-purple">
+            <div>Gains Opérateurs Tiers</div>
+            <div class="stat-val"><?= number_format($gainsVentiles['externe'] ?? 0, 2, ',', ' ') ?> AR</div>
+            <div class="stat-sub">Commissions sur autres réseaux</div>
+        </div>
+
+        <div class="card-stat bg-orange">
+            <div>À Reverser aux Opérateurs</div>
+            <div class="stat-val"><?= number_format($totalAEnvoyerOperateurs ?? 0, 2, ',', ' ') ?> AR</div>
+            <div class="stat-sub">Cumul dus aux autres réseaux (V2)</div>
+        </div>
+    </div>
+
+    <!-- Section des 10 dernières transactions -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+        <h3>10 Dernières transactions transitées</h3>
+        <a href="<?= site_url('admin/situation-compte') ?>" class="btn">Voir tous les rapports</a>
+    </div>
+
+    <?php if (!empty($recentTransactions)): ?>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Destinataire / Réseau</th>
+                    <th>Montant</th>
+                    <th>Frais Perçus</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($recentTransactions as $tx): ?>
                     <tr>
-                        <th>ID</th>
-                        <th>Type</th>
-                        <th>Montant</th>
-                        <th>Frais perçus</th>
+                        <td>#<?= esc($tx->id) ?></td>
+                        <td><small><?= date('d/m/Y H:i', strtotime($tx->date_transaction)) ?></small></td>
+                        <td><strong><?= esc($tx->type_operation ?? 'Inconnu') ?></strong></td>
+                        <td>
+                            <?= esc($tx->numero_destination ?? '-') ?>
+                            <?php if (!empty($tx->nom_operateur_destination)): ?>
+                                <span class="badge badge-externe"><?= esc($tx->nom_operateur_destination) ?></span>
+                            <?php else: ?>
+                                <span class="badge badge-interne">Notre Réseau</span>
+                            <?php endif; ?>
+                        </td>
+                        <td><?= number_format($tx->montant, 2, ',', ' ') ?> AR</td>
+                        <td style="color: #16a34a; font-weight: bold;">
+                            +<?= number_format($tx->frais_total ?? $tx->frais, 2, ',', ' ') ?> AR
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($dernieresTransactions as $tx): ?>
-                        <tr>
-                            <td>#<?= esc($tx->id) ?></td>
-                            <td><strong><?= esc($tx->type_nom) ?></strong></td>
-                            <td><?= number_format($tx->montant, 2, ',', ' ') ?> AR</td>
-                            <td style="color: #27ae60; font-weight: bold;">+<?= number_format($tx->frais, 2, ',', ' ') ?> AR</td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <p>Aucune transaction n'a encore transité par le système.</p>
-        <?php endif; ?>
-    
-    <?= $this->endSection() ?>
-</body>
-</html>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php else: ?>
+        <p style="margin-top: 15px; color: #6b7280;">Aucune transaction enregistrée pour le moment.</p>
+    <?php endif; ?>
+
+<?= $this->endSection() ?>

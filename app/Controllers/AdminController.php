@@ -14,10 +14,10 @@ class AdminController extends BaseController
      */
     public function index()
     {
-        $session = session();
-        if (!$session->get('admin_logged_in')) {
-            return redirect()->to('/login/admin');
-        }
+        // $session = session();
+        // if (!$session->get('admin_logged_in')) {
+        //     return redirect()->to('/login/admin');
+        // }
 
         $clientModel      = new ClientModel();
         $compteModel      = new CompteModel();
@@ -27,7 +27,7 @@ class AdminController extends BaseController
         // Statistiques générales
         $totalClients      = $clientModel->countAll();
         $totalComptes      = $compteModel->countAll();
-        $soldeTotalClients = $compteModel->selectSum('solde')->first()['solde'] ?? 0;
+        $soldeTotalClients = $compteModel->selectSum('solde')->first()->solde ?? 0;
 
         // V2 : Gains ventilés (Notre opérateur vs Autres)
         $gainsVentiles = $transactionModel->getGainTotalVentile();

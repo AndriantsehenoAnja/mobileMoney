@@ -8,6 +8,16 @@ in APPPATH/Views/Client/layout/main.php on line 25.
  5 SYSTEMPATH/Common.php(1250): CodeIgniter\View\View->render()
  6 APPPATH/Controllers/ClientController.php(655): view()
  7 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\ClientController->transfertMultiple()
+CRITICAL - 2026-07-20 19:52:50 --> CodeIgniter\Validation\Exceptions\ValidationException: "exists" is not a valid rule.
+[Method: POST, Route: admin/prefix/create]
+in SYSTEMPATH/Validation/Validation.php on line 354.
+ 1 SYSTEMPATH/Validation/Validation.php(354): CodeIgniter\Validation\Exceptions\ValidationException::forRuleNotFound()
+ 2 SYSTEMPATH/Validation/Validation.php(210): CodeIgniter\Validation\Validation->processRules()
+ 3 SYSTEMPATH/BaseModel.php(1615): CodeIgniter\Validation\Validation->run()
+ 4 SYSTEMPATH/BaseModel.php(868): CodeIgniter\BaseModel->validate()
+ 5 SYSTEMPATH/Model.php(668): CodeIgniter\BaseModel->insert()
+ 6 APPPATH/Controllers/PrefixController.php(98): CodeIgniter\Model->insert()
+ 7 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\PrefixController->store()
  8 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
  9 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
 10 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
@@ -25,3 +35,35 @@ in SYSTEMPATH/Exceptions/FrameworkException.php on line 39.
  7 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
  8 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
  9 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-07-20 20:03:01 --> ErrorException: Undefined property: stdClass::$frais
+[Method: GET, Route: Client]
+in APPPATH/Views/Client/index.php on line 93.
+ 1 APPPATH/Views/Client/index.php(93): CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/View/View.php(240): include('/home/anja/Documents/s4/System d\'Information Rojo/project/mobileMoney/app/Views/Client/index.php')
+ 3 SYSTEMPATH/View/View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH/Common.php(1250): CodeIgniter\View\View->render()
+ 5 APPPATH/Controllers/ClientController.php(91): view()
+ 6 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\ClientController->index()
+ 7 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
+ 8 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 9 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+11 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-07-20 20:17:36 --> TypeError: App\Controllers\LoginController::index(): Return value must be of type string, CodeIgniter\HTTP\RedirectResponse returned
+[Method: GET, Route: loginClient]
+in APPPATH/Controllers/LoginController.php on line 16.
+ 1 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\LoginController->index()
+ 2 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
+ 3 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 4 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 6 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-07-20 20:17:37 --> TypeError: App\Controllers\LoginController::index(): Return value must be of type string, CodeIgniter\HTTP\RedirectResponse returned
+[Method: GET, Route: loginClient]
+in APPPATH/Controllers/LoginController.php on line 16.
+ 1 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\LoginController->index()
+ 2 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
+ 3 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 4 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 5 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 6 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()

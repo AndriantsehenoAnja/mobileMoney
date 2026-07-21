@@ -6,6 +6,13 @@ use App\Models\BaremeFraisModel;
 use App\Models\TypeOperationModel;
 class BaremeController extends BaseController
 {
+    public function index()
+    {
+        $baremeModel = new BaremeFraisModel();
+        $baremes = $baremeModel->findAll();
+
+        return view("bareme/index", ['baremes' => $baremes]);
+    }
     public function showbyTypeOperation($id)
     {
         $baremeModel = new BaremeFraisModel();

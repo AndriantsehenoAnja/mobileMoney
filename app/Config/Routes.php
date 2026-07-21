@@ -67,8 +67,8 @@ $routes->group('admin', ['namespace' => 'App\Controllers'], function ($routes) {
     // --------------------------------------
     $routes->group('prefix', function ($routes) {
         $routes->get('/', 'PrefixController::index');
-        $routes->get('form', 'PrefixController::form');
-        $routes->post('create', 'PrefixController::create');
+        $routes->get('form', 'PrefixController::create');
+        $routes->post('create', 'PrefixController::store');
         $routes->get('edit/(:num)', 'PrefixController::edit/$1');
         $routes->post('update/(:num)', 'PrefixController::update/$1');
         $routes->get('delete/(:num)', 'PrefixController::delete/$1');
@@ -99,8 +99,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers'], function ($routes) {
     $routes->group('situation-compte', function ($routes) {
         $routes->get('/', 'SituationCompteController::index');
         $routes->get('gain-total', 'SituationCompteController::getGainTotalParType');
-        $routes->get('gain', 'SituationCompteController::getGainTotalParType'); // Alias pour le lien gain.php
-        $routes->get('operateurs', 'SituationCompteController::getSoldeOperateurs'); // Route V2 (Versement réseaux tiers)
+        $routes->get('operateurs', 'SituationCompteController::operateurs');
     });
 
 });

@@ -58,7 +58,7 @@
 
         <div class="card-stat bg-orange">
             <div>À Reverser aux Opérateurs</div>
-            <div class="stat-val"><?= number_format($totalAEnvoyerOperateurs ?? 0, 2, ',', ' ') ?> AR</div>
+            <div class="stat-val"><?= number_format($totalAEnvoyerOperateurs[0]->total_a_envoyer ?? 0, 2, ',', ' ') ?> AR</div>
             <div class="stat-sub">Cumul dus aux autres réseaux (V2)</div>
         </div>
     </div>

@@ -4,7 +4,7 @@
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>✏️ Modifier le Barème #<?= is_array($bareme) ? $bareme['id'] : $bareme->id ?></h2>
-    <a href="<?= site_url('Admin/bareme') ?>" class="btn">🔙 Annuler</a>
+    <a href="<?= site_url('admin/type-operation') ?>" class="btn">🔙 Annuler</a>
 </div>
 
 <?php 

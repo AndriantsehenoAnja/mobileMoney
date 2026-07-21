@@ -61,67 +61,125 @@ CREATE TABLE transactions (
     FOREIGN KEY(operateur_destination_id) REFERENCES operateurs(id)
 );
 
-INSERT INTO operateurs (id, nom, commission, est_notre_operateur) VALUES
-(1, 'Notre Reseau', 0.00, 1),
-(2, 'Orange', 2.00, 0),   -- Ex: 2% ou montant fixe
-(3, 'Telma', 2.50, 0),
-(4, 'Airtel', 2.00, 0);
+-- ========================================================
+-- 1. OPERATEURS & PREFIXES
+-- Notre opérateur : Telma (033, 037)
+-- Autres opérateurs : Orange (032), Airtel (034)
+-- ========================================================
+INSERT INTO operateurs (nom, commission, est_notre_operateur) VALUES 
+('Telma (Nous)', 0.0, 1),      -- id: 1 (Notre opérateur)
+('Orange', 2.5, 0),            -- id: 2 (2.5% de commission)
+('Airtel', 3.0, 0);            -- id: 3 (3.0% de commission)
 
-INSERT INTO prefixes (id, prefixe, operateur_id) VALUES
-(1, '034', 1), -- Notre réseau
-(2, '038', 1), -- Notre réseau
-(3, '032', 2), -- Orange
-(4, '033', 3), -- Telma
-(5, '037', 4); -- Airtel
+INSERT INTO prefixes (prefixe, operateur_id) VALUES 
+('033', 1),
+('037', 1),
+('032', 2),
+('034', 3);
 
-INSERT INTO clients (id, nom, numero, prefixe_id, date_creation) VALUES
-(1, 'Rabe Jean', '0341234567', 1, '2026-01-10 09:00:00'),
-(2, 'Rakoto Marie', '0389876543', 2, '2026-01-15 10:30:00'),
-(3, 'Rakoto bob', '0389876542', 2, '2026-01-15 10:30:00'),
-(4, 'Rakoto Samuel', '0389876541', 2, '2026-01-15 10:30:00');
-
-
-INSERT INTO comptes (id, client_id, solde) VALUES
-(1, 1, 250000.00),
-(2, 2, 120000.00);
-
-INSERT INTO comptes (id, client_id, solde) VALUES
-(3, 3, 50000.00),
-(4, 4, 75000.00);
-
-INSERT INTO types_operations (id, nom) VALUES
-(1, 'Depot'),
+-- ========================================================
+-- 2. TYPES D'OPERATIONS
+-- ========================================================
+INSERT INTO types_operations (id, nom) VALUES 
+(1, 'Dépôt'),
 (2, 'Retrait'),
-(3, 'Transfert Interne'),
-(4, 'Transfert Inter-operateur');
+(3, 'Transfert');
 
-INSERT INTO baremes_frais (type_operation_id, montant_min, montant_max, frais) VALUES
--- Retrait
-(2, 1000.00, 50000.00, 500.00),
-(2, 50001.00, 500000.00, 1500.00),
+-- ========================================================
+-- 3. BAREME DES FRAIS (Selon le tableau de l'énoncé)
+-- ========================================================
+-- Frais pour les Retraits / Transferts de base
+INSERT INTO baremes_frais (type_operation_id, montant_min, montant_max, frais) VALUES 
+(3, 100, 1000, 50),
+(3, 1001, 5000, 50),
+(3, 5001, 10000, 100),
+(3, 10001, 25000, 200),
+(3, 25001, 50000, 400),
+(3, 50001, 100000, 800),
+(3, 100010, 250000, 1500),
+(3, 250001, 500000, 1500),
+(3, 500001, 1000000, 2500),
+(3, 1000001, 2000000, 3000);
 
--- Transfert Interne
-(3, 1000.00, 100000.00, 200.00),
-(3, 100001.00, 1000000.00, 1000.00),
+-- Même barème appliqué pour les retraits (type_operation_id = 2)
+INSERT INTO baremes_frais (type_operation_id, montant_min, montant_max, frais) VALUES 
+(2, 100, 1000, 50),
+(2, 1001, 5000, 50),
+(2, 5001, 10000, 100),
+(2, 10001, 25000, 200),
+(2, 25001, 50000, 400),
+(2, 50001, 100000, 800),
+(2, 100010, 250000, 1500),
+(2, 250001, 500000, 1500),
+(2, 500001, 1000000, 2500),
+(2, 1000001, 2000000, 3000);
 
--- Transfert Inter-opérateur
-(4, 1000.00, 100000.00, 300.00),
-(4, 100001.00, 1000000.00, 1500.00);
+insert into baremes_frais (type_operation_id, montant_min, montant_max, frais) values 
 
-INSERT INTO transactions 
-(type_operation_id, compte_source, compte_destination, numero_destination, operateur_destination_id, montant, frais_base, frais_commission_externe, frais_retrait_inclus, frais_total, date_transaction) 
-VALUES
--- 1. Dépôt initial sur le compte 1
-(1, 1, 1, '0341234567', 1, 300000.00, 0.00, 0.00, 0.00, 0.00, '2026-02-01 08:00:00'),
+(1, 0, 2000000, 0);
+-- ========================================================
+-- 4. CLIENTS & COMPTES
+-- ========================================================
+-- Clients internes (Telma)
+INSERT INTO clients (nom, numero, prefixe_id) VALUES 
+('Rakoto Jean', '0331122233', 1),    -- id: 1
+('Rabe Paul', '0379988877', 2),      -- id: 2
+('Rasoa Marie', '0334455566', 1);    -- id: 3
 
--- 2. Transfert interne : Client 1 (Rabe) -> Client 2 (Rakoto)
-(3, 1, 2, '0389876543', 1, 50000.00, 200.00, 0.00, 0.00, 200.00, '2026-02-02 14:15:00'),
+-- Comptes clients correspondants
+INSERT INTO comptes (client_id, solde) VALUES 
+(1, 150000), -- Compte Rakoto
+(2, 50000),  -- Compte Rabe
+(3, 10000);  -- Compte Rasoa
 
--- 3. Transfert externe : Client 1 -> Numéro Telma (compte_destination NULL)
-(4, 1, NULL, '0331122334', 3, 20000.00, 300.00, 500.00, 0.00, 800.00, '2026-02-03 11:00:00'),
+-- ========================================================
+-- 5. EXEMPLES DE TRANSACTIONS (Pour tester les vues/dashboards)
+-- ========================================================
 
--- 4. Transfert externe : Client 2 -> Numéro Orange (compte_destination NULL)
-(4, 2, NULL, '0329988776', 2, 150000.00, 1500.00, 2000.00, 0.00, 3500.00, '2026-02-04 16:45:00'),
+-- Transaction 1: Transfert interne classique (Rakoto -> Rabe : 20,000 Ar)
+-- Frais de base = 200 Ar | Commission externe = 0 | Retrait inclus = 0 | Total = 200 Ar
+INSERT INTO transactions (
+    type_operation_id, compte_source, compte_destination, numero_destination, 
+    operateur_destination_id, montant, frais_base, frais_commission_externe, 
+    frais_retrait_inclus, frais_total
+) VALUES (
+    3, 1, 2, '0379988877', 
+    1, 20000, 200, 0, 
+    0, 200
+);
 
--- 5. Retrait : Client 1
-(2, 1, NULL, '0341234567', 1, 30000.00, 500.00, 0.00, 0.00, 500.00, '2026-02-05 09:20:00');
+-- Transaction 2: Transfert interne AVEC option retrait inclus (Rakoto -> Rasoa : 15,000 Ar)
+-- Frais de base = 200 Ar | Commission externe = 0 | Frais retrait (15k Ar) = 200 Ar | Total = 400 Ar
+INSERT INTO transactions (
+    type_operation_id, compte_source, compte_destination, numero_destination, 
+    operateur_destination_id, montant, frais_base, frais_commission_externe, 
+    frais_retrait_inclus, frais_total
+) VALUES (
+    3, 1, 3, '0334455566', 
+    1, 15000, 200, 0, 
+    200, 400
+);
+
+-- Transaction 3: Transfert externe vers Orange (Rakoto -> 0321234567 : 50,000 Ar)
+-- Frais de base = 400 Ar | Commission Orange (2.5% de 50,000) = 1,250 Ar | Total = 1,650 Ar
+INSERT INTO transactions (
+    type_operation_id, compte_source, compte_destination, numero_destination, 
+    operateur_destination_id, montant, frais_base, frais_commission_externe, 
+    frais_retrait_inclus, frais_total
+) VALUES (
+    3, 1, NULL, '0321234567', 
+    2, 50000, 400, 1250, 
+    0, 1650
+);
+
+-- Transaction 4: Transfert externe vers Airtel (Rabe -> 0340011122 : 10,000 Ar)
+-- Frais de base = 100 Ar | Commission Airtel (3% de 10,000) = 300 Ar | Total = 400 Ar
+INSERT INTO transactions (
+    type_operation_id, compte_source, compte_destination, numero_destination, 
+    operateur_destination_id, montant, frais_base, frais_commission_externe, 
+    frais_retrait_inclus, frais_total
+) VALUES (
+    3, 2, NULL, '0340011122', 
+    3, 10000, 100, 300, 
+    0, 400
+);

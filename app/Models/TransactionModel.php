@@ -15,7 +15,7 @@ class TransactionModel extends Model
         'numero_destination',        // NOUVEAU V2
         'operateur_destination_id', // NOUVEAU V2
         'montant',
-        'frais',                     // frais de base
+        'frais_base',                     // frais de base
         'frais_commission_externe',  // NOUVEAU V2 (%)
         'frais_retrait_inclus',      // NOUVEAU V2 (option client)
         'frais_total',               // NOUVEAU V2
@@ -24,14 +24,52 @@ class TransactionModel extends Model
     protected $useTimestamps = false;
     protected $returnType = 'object';
 
+    public function getGainTotalParType()
+    {
+        return $this->select('type_operation_id, SUM(frais_total) as total_gain')
+                    ->groupBy('type_operation_id')
+                    ->findAll();
+    }
     /**
      * Récupérer les transactions d'un compte avec toutes les infos
      */
-        // getGainTotalParType
+        
 /**
      * Calcule le gain réel généré par type d'opération (retrait, transfert, etc.)
      * en faisant la somme des frais perçus sur les transactions passées.
      */
+    public function getGainTotalGlobal(){
+        return $this->select('SUM(frais_total) as total_gain')
+                    ->first()
+                    ->total_gain ?? 0;
+    }
+    public function getTransactionsAvecDetails($limit)
+    {
+        return $this->select('transactions.*, 
+                               types_operations.nom as type_operation,
+                               source.id as numero_source,
+                               source_client.nom as nom_source,
+                               dest.id as numero_destination,
+                               dest_client.nom as nom_destination')
+                    ->join('types_operations', 'types_operations.id = transactions.type_operation_id')
+                    ->join('comptes as source', 'source.id = transactions.compte_source', 'left')
+                    ->join('clients as source_client', 'source_client.id = source.client_id', 'left')
+                    ->join('comptes as dest', 'dest.id = transactions.compte_destination', 'left')
+                    ->join('clients as dest_client', 'dest_client.id = dest.client_id', 'left')
+                    ->orderBy('transactions.date_transaction', 'DESC')
+                    ->limit($limit)
+                    ->findAll();
+    }
+    public function getMontantTotalAEnvoyerAuxOperateurs(){
+        return $this->select('
+                operateurs.nom as operateur,
+                SUM(transactions.frais_commission_externe) as total_a_envoyer
+            ')
+            ->join('operateurs', 'operateurs.id = transactions.operateur_destination_id')
+            ->where('operateurs.est_notre_operateur', 0) // Uniquement les opérateurs externes
+            ->groupBy('transactions.operateur_destination_id')
+            ->findAll();
+    }
     public function getGainTotalVentile()
     {
         return $this->select('
@@ -244,7 +282,7 @@ class TransactionModel extends Model
      */
     public function getTotalFraisByPeriode($dateDebut, $dateFin)
     {
-        $result = $this->select('SUM(frais) as total')
+        $result = $this->select('SUM(frais_base) as total')
                        ->where('date_transaction >=', $dateDebut)
                        ->where('date_transaction <=', $dateFin)
                        ->first();
@@ -355,7 +393,7 @@ class TransactionModel extends Model
                 $solde += $transaction->montant;
             }
             if ($transaction->compte_source == $compteId) {
-                $solde -= ($transaction->montant + $transaction->frais);
+                $solde -= ($transaction->montant + $transaction->frais_base);
             }
         }
 

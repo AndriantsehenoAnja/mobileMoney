@@ -451,7 +451,7 @@ class ClientController extends BaseController
             return redirect()->back()->with('error', 'Compte expéditeur non trouvé.');
         }
 
-        // 5. Analyse du préfixe du destinataire (ex: "034", "032", "033")
+        // 5. Analyse du préfixe du destinataire 
         $prefixeSaisi = substr($numeroDestinataire, 0, 3);
         $prefixData   = $prefixModel->findByPrefixeWithOperateur($prefixeSaisi);
 

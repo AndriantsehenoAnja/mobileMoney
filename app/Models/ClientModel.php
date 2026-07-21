@@ -72,7 +72,6 @@ class ClientModel extends Model
 
         $prefixe = substr($numero, 0, 3);
         
-        // ✅ Récupérer le modèle correctement
         $prefixeModel = new \App\Models\PrefixModel();
         $prefixeInfo = $prefixeModel->findByPrefixe($prefixe);
         
@@ -88,7 +87,6 @@ class ClientModel extends Model
             ];
         }
 
-        // ✅ Extraction sécurisée du préfixe (tableau)
         $prefixeValue = is_array($prefixeInfo) ? $prefixeInfo['prefixe'] : $prefixeInfo->prefixe;
         $prefixeId = is_array($prefixeInfo) ? $prefixeInfo['id'] : $prefixeInfo->id;
 

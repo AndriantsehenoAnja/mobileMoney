@@ -28,5 +28,10 @@
                 🔄 Montants aux Opérateurs
             </a>
         </li>
+        <li class="nav-item">
+    <a class="nav-link" href="<?= base_url('admin/operateur') ?>">
+        <i class="bi bi-percent"></i> Commissions Opérateurs
+    </a>
+</li>
     </ul>
 </div>

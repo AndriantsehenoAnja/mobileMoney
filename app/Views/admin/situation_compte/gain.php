@@ -1,77 +1,102 @@
 <?= $this->extend('admin/layout') ?>
 
 <?= $this->section('content') ?>
+<div class="container-fluid mt-4">
+    <h2><i class="bi bi-graph-up-arrow me-2"></i>Situation des Gains via les Frais (V2)</h2>
+    <p class="text-muted">Analyse détaillée de la ventilation des gains générés par les transactions.</p>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h2>💰 Rapport des Gains et Commissions (V2)</h2>
-    <a href="<?= site_url('Admin/situation-compte/operateurs') ?>" class="btn">🔄 Voir montants dus aux opérateurs</a>
-</div>
-
-<p style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">
-    Analyse détaillée de la ventilation des frais perçus (frais de base réseau vs commissions reversées aux opérateurs externes).
-</p>
-
-<?php if (!empty($gainTotal)): ?>
-    <table>
-        <thead>
-            <tr>
-                <th>Type d'Opération</th>
-                <th>Destination</th>
-                <th style="text-align: right;">Gains Réseau Local</th>
-                <th style="text-align: right;">Commissions Opérateurs Tiers</th>
-                <th style="text-align: right;">Total Généré</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php 
-                $cumulInterne = 0;
-                $cumulExterne = 0;
-            ?>
-            <?php foreach ($gainTotal as $row): ?>
-                <?php 
-                    $opType = is_array($row) ? ($row['type_operation'] ?? $row['type_nom'] ?? 'N/A') : ($row->type_operation ?? $row->type_nom ?? 'N/A');
-                    $gainLocal = is_array($row) ? ($row['gain_interne'] ?? $row['total_gain'] ?? 0) : ($row->gain_interne ?? $row->total_gain ?? 0);
-                    $gainComm = is_array($row) ? ($row['gain_commission_externe'] ?? 0) : ($row->gain_commission_externe ?? 0);
-                    $reseau = is_array($row) ? ($row['reseau_cible'] ?? 'INTERNE') : ($row->reseau_cible ?? 'INTERNE');
-                    
-                    $totalLigne = $gainLocal + $gainComm;
-                    $cumulInterne += $gainLocal;
-                    $cumulExterne += $gainComm;
-                ?>
-                <tr>
-                    <td><strong><?= esc($opType) ?></strong></td>
-                    <td>
-                        <?php if ($reseau === 'EXTERNE'): ?>
-                            <span class="badge badge-externe">Réseaux Tiers</span>
-                        <?php else: ?>
-                            <span class="badge badge-interne">Notre Réseau</span>
-                        <?php endif; ?>
-                    </td>
-                    <td style="text-align: right; color: #16a34a; font-weight: bold;">
-                        <?= number_format($gainLocal, 2, ',', ' ') ?> AR
-                    </td>
-                    <td style="text-align: right; color: #b45309; font-weight: bold;">
-                        <?= number_format($gainComm, 2, ',', ' ') ?> AR
-                    </td>
-                    <td style="text-align: right; font-weight: bold;">
-                        <?= number_format($totalLigne, 2, ',', ' ') ?> AR
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-        <tfoot style="background: #f8fafc; font-weight: bold;">
-            <tr>
-                <td colspan="2" style="text-align: right;">Totaux Cumulés :</td>
-                <td style="text-align: right; color: #16a34a;"><?= number_format($cumulInterne, 2, ',', ' ') ?> AR</td>
-                <td style="text-align: right; color: #b45309;"><?= number_format($cumulExterne, 2, ',', ' ') ?> AR</td>
-                <td style="text-align: right; color: #2563eb;"><?= number_format($cumulInterne + $cumulExterne, 2, ',', ' ') ?> AR</td>
-            </tr>
-        </tfoot>
-    </table>
-<?php else: ?>
-    <div style="text-align: center; padding: 40px; color: #6b7280;">
-        <p style="font-size: 16px;">Aucun gain enregistré pour le moment.</p>
+    <!-- Résumé rapide -->
+    <div class="row my-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Gains Notre Réseau</h5>
+                    <h3><?= number_format($totalNotreReseau, 2) ?> Ar</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-warning shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Gains Autres Opérateurs</h5>
+                    <h3><?= number_format($totalAutresOperateurs, 2) ?> Ar</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-primary shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Grand Total Gains</h5>
+                    <h3><?= number_format($grandTotal, 2) ?> Ar</h3>
+                </div>
+            </div>
+        </div>
     </div>
-<?php endif; ?>
 
+    <!-- Section 1 : Notre Réseau -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">1. Gains générés sur notre réseau</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Type d'Opération</th>
+                        <th>Total Frais de Base</th>
+                        <th>Frais de Retrait Inclus</th>
+                        <th>Gain Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($gainsNotreReseau)): ?>
+                        <?php foreach ($gainsNotreReseau as $g): ?>
+                            <tr>
+                                <td><strong><?= esc($g['type_nom']) ?></strong></td>
+                                <td><?= number_format($g['total_frais_base'], 2) ?> Ar</td>
+                                <td><?= number_format($g['total_frais_retrait_inclus'], 2) ?> Ar</td>
+                                <td class="fw-bold text-success"><?= number_format($g['gain_total'], 2) ?> Ar</td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="4" class="text-center">Aucune transaction enregistrée.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 2 : Autres Opérateurs -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">2. Gains générés sur les autres opérateurs</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Opérateur Destinataire</th>
+                        <th>Frais de Base Collectés</th>
+                        <th>Commission Externe (%) Collectée</th>
+                        <th>Gain Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($gainsAutresOperateurs)): ?>
+                        <?php foreach ($gainsAutresOperateurs as $ga): ?>
+                            <tr>
+                                <td><strong><?= esc($ga['operateur_nom']) ?></strong></td>
+                                <td><?= number_format($ga['total_frais_base'], 2) ?> Ar</td>
+                                <td><?= number_format($ga['total_commission_externe'], 2) ?> Ar</td>
+                                <td class="fw-bold text-warning"><?= number_format($ga['gain_total'], 2) ?> Ar</td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="4" class="text-center">Aucun transfert inter-opérateur réalisé.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 <?= $this->endSection() ?>

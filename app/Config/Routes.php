@@ -102,4 +102,13 @@ $routes->group('admin', ['namespace' => 'App\Controllers'], function ($routes) {
         $routes->get('operateurs', 'SituationCompteController::operateurs');
     });
 
+    // --------------------------------------
+    // E. Gestion des Opérateurs & Commissions (V2)
+    // --------------------------------------
+    $routes->group('operateur', function ($routes) {
+        $routes->get('/', 'OperateurController::index');
+        $routes->get('edit/(:num)', 'OperateurController::edit/$1');
+        $routes->post('update/(:num)', 'OperateurController::update/$1');
+    });
+
 });

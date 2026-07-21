@@ -1,17 +1,7 @@
-CRITICAL - 2026-07-21 05:39:47 --> TypeError: App\Controllers\LoginController::index(): Return value must be of type string, CodeIgniter\HTTP\RedirectResponse returned
-[Method: GET, Route: loginClient]
-in APPPATH/Controllers/LoginController.php on line 22.
- 1 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\LoginController->index()
- 2 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
- 3 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
- 4 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
- 5 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
- 6 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
- 7 SYSTEMPATH/rewrite.php(44): require_once('/home/itu/Documents/s4/SystemdInformationRojo/github/mobileMoney/public/index.php')
-CRITICAL - 2026-07-21 05:40:38 --> TypeError: App\Controllers\LoginController::index(): Return value must be of type string, CodeIgniter\HTTP\RedirectResponse returned
-[Method: GET, Route: loginClient]
-in APPPATH/Controllers/LoginController.php on line 22.
- 1 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\LoginController->index()
+CRITICAL - 2026-07-21 06:51:39 --> Error: Cannot use object of type stdClass as array
+[Method: GET, Route: admin]
+in APPPATH/Controllers/AdminController.php on line 17.
+ 1 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\AdminController->index()
  2 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
  3 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
  4 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()

@@ -8,73 +8,123 @@ use App\Models\CompteModel;
 
 class SituationCompteController extends BaseController
 {
-    /**
-     * Page principale : Synthèse de la situation du compte et des gains V2
-     */
-    public function index()
+    protected $transactionModel;
+    protected $operateurModel;
+    protected $compteModel;
+
+    public function __construct()
     {
-        // $session = session();
-        // if (!$session->get('admin_logged_in')) {
-        //     return redirect()->to('/login/admin');
-        // }
-
-        $transactionModel = new TransactionModel();
-        $operateurModel   = new OperateurModel();
-        $compteModel      = new CompteModel();
-
-        // 1. Total général des gains (Frais perçus)
-        $gainTotalGlobal = $transactionModel->getGainTotalGlobal();
-
-        // 2. V2 : Ventilation des gains (Notre réseau vs Autres Opérateurs)
-        $gainsVentiles = $transactionModel->getGainTotalVentile(); 
-        // Exemple de retour attendu : ['interne' => X, 'externe' => Y]
-
-        // 3. Gains détaillés par type d'opération (Dépôt, Retrait, Transfert, etc.)
-        $gainsParType = $transactionModel->getGainTotalParType();
-
-        // 4. V2 : Situation des montants à envoyer à chaque opérateur
-        $montantsAEnvoyerParOperateur = $transactionModel->getSituationMontantsParOperateur();
-
-        // 5. Total du solde des comptes clients en circulation
-        $soldeTotalClients = $compteModel->selectSum('solde')->first()->solde ?? 0;
-
-        $data = [
-            'title'                        => 'Situation de Compte V2',
-            'page_title'                   => 'Situation Globale et Gain des Frais',
-            'current_page'                 => 'situation',
-            'gainTotalGlobal'              => $gainTotalGlobal,
-            'gainsVentiles'                => $gainsVentiles,
-            'gainsParType'                 => $gainsParType,
-            'montantsAEnvoyerParOperateur' => $montantsAEnvoyerParOperateur,
-            'soldeTotalClients'            => $soldeTotalClients
-        ];
-
-        return view('admin/situation_compte/index', $data);
+        $this->transactionModel = new TransactionModel();
+        $this->operateurModel   = new OperateurModel();
+        $this->compteModel      = new CompteModel();
     }
 
-    /**
-     * Vue détaillée dédiée uniquement à la situation des opérateurs externes (V2)
-     */
-    public function operateurs()
+    // Situation générale des comptes
+public function index()
+{
+    // On sélectionne tous les champs attendus par la vue avec leurs bons alias
+    $data['clientsSituation'] = $this->compteModel
+        ->select('
+            comptes.id as compte_id,
+            comptes.solde,
+            clients.nom,
+            clients.numero,
+            clients.date_creation,
+            prefixes.prefixe,
+            operateurs.nom as nom_operateur
+        ')
+        ->join('clients', 'clients.id = comptes.client_id')
+        ->join('prefixes', 'prefixes.id = clients.prefixe_id', 'left')
+        ->join('operateurs', 'operateurs.id = prefixes.operateur_id', 'left')
+        ->findAll();
+
+    return view('admin/situation_compte/index', $data);
+}
+    // Situation des gains ventilée par type et séparant Notre Réseau des Autres Opérateurs (V2)
+    public function getGainTotalParType()
     {
-        // $session = session();
-        // if (!$session->get('admin_logged_in')) {
-        //     return redirect()->to('/login/admin');
-        // }
+        $db = \Config\Database::connect();
 
-        $transactionModel = new TransactionModel();
+        // 1. Gains issus de NOTRE RÉSEAU :
+        // - Opérations internes/locales (Dépôt, Retrait, Transfert Interne)
+        // - On comptabilise : frais_base + frais_retrait_inclus
+        $gainsNotreReseau = $db->table('transactions t')
+            ->select('
+                t.type_operation_id,
+                tp.nom as type_nom,
+                SUM(t.frais_base) as total_frais_base,
+                SUM(t.frais_retrait_inclus) as total_frais_retrait_inclus,
+                SUM(t.frais_base + t.frais_retrait_inclus) as gain_total
+            ')
+            ->join('types_operations tp', 'tp.id = t.type_operation_id')
+            ->join('operateurs op', 'op.id = t.operateur_destination_id', 'left')
+            ->groupStart()
+                ->where('op.est_notre_operateur', 1)
+                ->orWhere('t.operateur_destination_id IS NULL')
+            ->groupEnd()
+            ->groupBy('t.type_operation_id, tp.nom')
+            ->get()
+            ->getResultArray();
 
-        // Ventilation des gains et situation des montants dus
-        $gainsVentiles                = $transactionModel->getGainTotalVentile();
-        $montantsAEnvoyerParOperateur = $transactionModel->getSituationMontantsParOperateur();
+        // 2. Gains issus des AUTRES OPÉRATEURS :
+        // - Transferts Inter-opérateurs
+        // - On comptabilise : frais_base + frais_commission_externe
+        $gainsAutresOperateurs = $db->table('transactions t')
+            ->select('
+                op.nom as operateur_nom,
+                SUM(t.frais_base) as total_frais_base,
+                SUM(t.frais_commission_externe) as total_commission_externe,
+                SUM(t.frais_base + t.frais_commission_externe) as gain_total
+            ')
+            ->join('operateurs op', 'op.id = t.operateur_destination_id')
+            ->where('op.est_notre_operateur', 0)
+            ->groupBy('op.id, op.nom')
+            ->get()
+            ->getResultArray();
+
+        // Calcul des totaux
+        $totalNotreReseau = 0;
+        foreach ($gainsNotreReseau as $g) {
+            $totalNotreReseau += (float)$g['gain_total'];
+        }
+
+        $totalAutresOperateurs = 0;
+        foreach ($gainsAutresOperateurs as $ga) {
+            $totalAutresOperateurs += (float)$ga['gain_total'];
+        }
 
         $data = [
-            'title'                        => 'Situation par Opérateur',
-            'page_title'                   => 'Montants à envoyer aux autres opérateurs',
-            'current_page'                 => 'situation_operateurs',
-            'gainsVentiles'                => $gainsVentiles,
-            'montantsAEnvoyerParOperateur' => $montantsAEnvoyerParOperateur
+            'gainsNotreReseau'      => $gainsNotreReseau,
+            'gainsAutresOperateurs' => $gainsAutresOperateurs,
+            'totalNotreReseau'      => $totalNotreReseau,
+            'totalAutresOperateurs' => $totalAutresOperateurs,
+            'grandTotal'            => $totalNotreReseau + $totalAutresOperateurs
         ];
+
+        return view('admin/situation_compte/gain', $data);
+    }
+    // Situation des montants cumulés à envoyer/reverser à chaque opérateur (V2)
+    public function operateurs()
+    {
+        $db = \Config\Database::connect();
+
+        // Requête cumulant les montants principaux transférés + la commission externe retenue par opérateur partenaire
+        $situationOperateurs = $db->table('operateurs op')
+            ->select('
+                op.id,
+                op.nom as operateur_nom,
+                op.commission,
+                COUNT(t.id) as nombre_transactions,
+                COALESCE(SUM(t.montant), 0) as total_montant_envoye,
+                COALESCE(SUM(t.frais_commission_externe), 0) as total_commission
+            ')
+            ->join('transactions t', 't.operateur_destination_id = op.id AND t.type_operation_id = 4', 'left')
+            ->where('op.est_notre_operateur', 0)
+            ->groupBy('op.id, op.nom, op.commission')
+            ->get()
+            ->getResultArray();
+
+        $data['situationOperateurs'] = $situationOperateurs;
 
         return view('admin/situation_compte/operateurs', $data);
     }

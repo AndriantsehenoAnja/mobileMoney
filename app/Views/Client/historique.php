@@ -29,7 +29,7 @@
                                 $isCredit = ($tx->compte_destination == $compte->id);
 
                                 // Calcul des frais totaux V2
-                                $fraisBase = $tx->frais ?? 0;
+                                $fraisBase = $tx->frais_base ?? 0;
                                 $fraisCommission = $tx->frais_commission_externe ?? 0;
                                 $fraisRetraitInclus = $tx->frais_retrait_inclus ?? 0;
                                 $fraisTotauxTx = $tx->frais_total ?? ($fraisBase + $fraisCommission + $fraisRetraitInclus);

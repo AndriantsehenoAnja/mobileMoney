@@ -155,3 +155,28 @@ VALUES
 (4, 1, NULL, '0331122334', 3, 20000.00, 300.00, 500.00, 0.00, 800.00, '2026-02-03 11:00:00'),
 (4, 2, NULL, '0329988776', 2, 150000.00, 1500.00, 3000.00, 0.00, 4500.00, '2026-02-04 16:45:00'),
 (2, 1, NULL, '0341234567', 1, 30000.00, 500.00, 0.00, 0.00, 500.00, '2026-02-05 09:20:00');
+
+-- epargne(
+-- id 
+-- idcompte
+-- montant
+-- )
+-- choixEpargne(
+-- id
+-- idcompte
+-- pourcentage
+-- )
+
+CREATE TABLE epargne(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idcompte INTEGER,
+    transactionid INTEGER,
+    montant NUMERIC,
+    dateEpargne DATETIME
+);
+
+CREATE TABLE choixEpargne(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idcompte INTEGER,
+    pourcentage NUMERIC
+);

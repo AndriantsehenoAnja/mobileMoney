@@ -22,37 +22,37 @@
         
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link <?= ($current_page == 'dashboard') ? 'active' : '' ?>" href="/Client">
+                <a class="nav-link " href="/Client">
                     <i class="fas fa-home"></i>
                     <span class="link-text">Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link <?= ($current_page == 'depot') ? 'active' : '' ?>" href="/depot">
+                <a class="nav-link" href="/depot">
                     <i class="fas fa-arrow-down"></i>
                     <span class="link-text">Dépôt</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link <?= ($current_page == 'retrait') ? 'active' : '' ?>" href="/retrait">
+                <a class="nav-link " href="/retrait">
                     <i class="fas fa-arrow-up"></i>
                     <span class="link-text">Retrait</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link <?= ($current_page == 'transfert') ? 'active' : '' ?>" href="/transfert">
+                <a class="nav-link " href="/transfert">
                     <i class="fas fa-exchange-alt"></i>
                     <span class="link-text">Transfert</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link <?= ($current_page == 'multitransfert') ? 'active' : '' ?>" href="/client/transfert-multiple">
+                <a class="nav-link " href="/client/transfert-multiple">
                     <i class="fas fa-exchange-alt"></i>
                     <span class="link-text">MultiTransfert</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link <?= ($current_page == 'historique') ? 'active' : '' ?>" href="/historique">
+                <a class="nav-link" href="/historique">
                     <i class="fas fa-history"></i>
                     <span class="link-text">Historique</span>
                 </a>

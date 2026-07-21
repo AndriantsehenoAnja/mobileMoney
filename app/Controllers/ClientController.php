@@ -8,6 +8,8 @@ use App\Models\PrefixModel;
 use App\Models\OperateurModel;
 use App\Models\TransactionModel;
 use App\Models\BaremeFraisModel;
+use App\Models\ChoixEpargneModel;
+use App\Models\EpargneModel;
 
 class ClientController extends BaseController
 {
@@ -35,16 +37,78 @@ class ClientController extends BaseController
     public function index()
     {
         $session = session();
+        
+        if (!$session->get('logged_in')) {
+            return redirect()->to('/login')->with('error', 'Veuillez vous connecter');
+        }
+        
         $clientId = $session->get('client_id');
-
-        $client = $this->clientModel->find($clientId);
-        $compte = $this->compteModel->where('client_id', $clientId)->first();
-
+        
+        $clientModel = new ClientModel();
+        $compteModel = new CompteModel();
+        $transactionModel = new TransactionModel();
+        
+        $client = $clientModel->find($clientId);
+        $compte = $compteModel->findByClientId($clientId);
+        
+        $transactions = [];
+        if ($compte) {
+            $transactions = $transactionModel
+                ->select('transactions.*, types_operations.nom as type_operation')
+                ->join('types_operations', 'types_operations.id = transactions.type_operation_id', 'left')
+                ->where('transactions.compte_source', $compte->id)
+                ->orWhere('transactions.compte_destination', $compte->id)
+                ->orderBy('transactions.date_transaction', 'DESC')
+                ->limit(5)
+                ->findAll();
+        }
+        
+        $totalDepots = 0;
+        $totalRetraits = 0;
+        $totalTransferts = 0;
+        $totalFrais = 0;
+        $totalTransactions = 0;
+        
+        if ($compte) {
+            $totalTransactions = $transactionModel
+                ->where('compte_source', $compte->id)
+                ->orWhere('compte_destination', $compte->id)
+                ->countAllResults();
+            
+            $allTransactions = $transactionModel
+                ->select('transactions.*, types_operations.nom as type_operation')
+                ->join('types_operations', 'types_operations.id = transactions.type_operation_id', 'left')
+                ->where('transactions.compte_source', $compte->id)
+                ->orWhere('transactions.compte_destination', $compte->id)
+                ->findAll();
+            
+            foreach ($allTransactions as $tx) {
+                $totalFrais += $tx->frais ?? 0;
+                if (strtolower($tx->type_operation ?? '') == 'depot') {
+                    $totalDepots += $tx->montant;
+                } elseif (strtolower($tx->type_operation ?? '') == 'retrait') {
+                    $totalRetraits += $tx->montant;
+                } elseif (strtolower($tx->type_operation ?? '') == 'transfert') {
+                    $totalTransferts += $tx->montant;
+                }
+            }
+        }
+        
         $data = [
+            'title' => 'Mon Compte - Mobile Money',
+            'page_title' => 'Dashboard',
+            'current_page' => 'dashboard',
             'client' => $client,
-            'compte' => $compte
+            'compte' => $compte,
+            'transactions' => $transactions,
+            'solde' => $compte ? $compte->solde : 0,
+            'total_transactions' => $totalTransactions,
+            'total_depots' => $totalDepots,
+            'total_retraits' => $totalRetraits,
+            'total_transferts' => $totalTransferts,
+            'total_frais' => $totalFrais
         ];
-
+        
         return view('Client/index', $data);
     }
 
@@ -274,6 +338,16 @@ class ClientController extends BaseController
         }
 
         $totalA_Deduire = $montant + $fraisTotal;
+        $EpargneModel = new EpargneModel;
+        $ChoixEpargne = new ChoixEpargneModel;
+        $Choix = $ChoixEpargne->getChoixEpargne($clientId);
+
+        $Epargne = $EpargneModel->getCompteEpargne($clientId);
+        
+        // $Epargne->addEpargne();
+
+        $montantNouveau = $montant * $Choix->pourcentage / 100; 
+        $montantReste = $montant - $montantNouveau;
 
         $compteSource = $this->compteModel->where('client_id', $clientId)->first();
 
@@ -304,7 +378,7 @@ class ClientController extends BaseController
             'compte_destination'       => $compteDest ? $compteDest['id'] : NULL,
             'numero_destination'       => $numeroDest,
             'operateur_destination_id' => $prefixeInfo['op_id'],
-            'montant'                  => $montant,
+            'montant'                  => $$montantReste,
             'frais_base'               => $fraisBase,
             'frais_commission_externe' => $fraisCommission,
             'frais_retrait_inclus'     => $fraisRetraitInclus,

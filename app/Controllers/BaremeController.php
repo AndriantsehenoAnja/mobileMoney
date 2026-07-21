@@ -11,7 +11,7 @@ class BaremeController extends BaseController
         $baremeModel = new BaremeFraisModel();
         $baremes = $baremeModel->findAll();
 
-        return view("bareme/index", ['baremes' => $baremes]);
+        return view("admin/bareme/index", ['baremes' => $baremes]);
     }
     public function showbyTypeOperation($id)
     {
@@ -24,7 +24,7 @@ class BaremeController extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException("Baremes with Type Operation ID $id not found");
         }
 
-        return view("bareme/show", ['baremes' => $baremes, 'type_operation' => $type_operation]);
+        return view("admin/bareme/show", ['baremes' => $baremes, 'type_operation' => $type_operation]);
     }
 
     public function edit($id)
@@ -39,7 +39,7 @@ class BaremeController extends BaseController
 
         $type_operations = $typeOperationModel->findAll();
 
-        return view("bareme/edit", ['bareme' => $bareme, 'type_operations' => $type_operations]);
+        return view("admin/bareme/edit", ['bareme' => $bareme, 'type_operations' => $type_operations]);
     }
     
     public function update($id)
@@ -65,7 +65,7 @@ class BaremeController extends BaseController
                 return redirect()->to('/admin/bareme/showbytypeoperation/' . $data['type_operation_id'])
                                 ->with('success', 'Bareme updated successfully.');
             } else {
-                return view("bareme/edit", [
+                return view("admin/bareme/edit", [
                     'errors'          => $baremeModel->errors(),
                     'bareme'          => array_merge($bareme, $data),
                     'type_operations' => $typeOperationModel->findAll()
@@ -74,7 +74,7 @@ class BaremeController extends BaseController
         }
 
         // Affichage initial du formulaire d'édition (GET)
-        return view("bareme/edit", [
+        return view("admin/bareme/edit", [
             'bareme'          => $bareme, 
             'type_operations' => $typeOperationModel->findAll()
         ]);
@@ -95,14 +95,14 @@ class BaremeController extends BaseController
             if ($baremeModel->insert($data)) {
                 return redirect()->to('/admin/type-operation')->with('success', 'Bareme added successfully.');
             } else {
-                return view("bareme/add", [
+                return view("admin/bareme/add", [
                     'errors' => $baremeModel->errors(),
                     'old' => $data
                 ]);
             }
         }
 
-        return view("bareme/add",[
+        return view("admin/bareme/add",[
             'type_operations' => (new TypeOperationModel())->findAll()
         ]);
     }
@@ -111,7 +111,7 @@ class BaremeController extends BaseController
         $typeOperationModel = new TypeOperationModel();
         $type_operations = $typeOperationModel->findAll();
 
-        return view("bareme/add", ['type_operations' => $type_operations]);
+        return view("admin/bareme/add", ['type_operations' => $type_operations]);
     }
 
 }

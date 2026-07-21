@@ -8,23 +8,23 @@
             </a>
         </li>
         <li>
-            <a href="<?= site_url('Admin/prefix') ?>">
+            <a href="<?= site_url('admin/prefix') ?>">
                 📞 Gestion Préfixes
             </a>
         </li>
         <li>
-            <a href="<?= site_url('Admin/type-operation') ?>">
+            <a href="<?= site_url('admin/type-operation') ?>">
                 💳 Types d'opérations
             </a>
         </li>
         <!-- Nouveauté V2 : Situation Globale & Opérateurs -->
         <li>
-            <a href="<?= site_url('Admin/situation-compte') ?>">
+            <a href="<?= site_url('admin/situation-compte') ?>">
                 📈 Situation & Gains (V2)
             </a>
         </li>
         <li>
-            <a href="<?= site_url('Admin/situation-compte/operateurs') ?>">
+            <a href="<?= site_url('admin/situation-compte/operateurs') ?>">
                 🔄 Montants aux Opérateurs
             </a>
         </li>

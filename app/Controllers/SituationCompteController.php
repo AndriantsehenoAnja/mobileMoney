@@ -49,7 +49,7 @@ class SituationCompteController extends BaseController
             'soldeTotalClients'            => $soldeTotalClients
         ];
 
-        return view('situation_compte/index', $data);
+        return view('admin/situation_compte/index', $data);
     }
 
     /**
@@ -76,6 +76,6 @@ class SituationCompteController extends BaseController
             'montantsAEnvoyerParOperateur' => $montantsAEnvoyerParOperateur
         ];
 
-        return view('situation_compte/operateurs', $data);
+        return view('admin/situation_compte/operateurs', $data);
     }
 }

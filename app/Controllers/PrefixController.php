@@ -29,7 +29,7 @@ class PrefixController extends BaseController
             'prefixes'     => $prefixes
         ];
 
-        return view('prefix/index', $data);
+        return view('admin/prefix/index', $data);
     }
 
     /**
@@ -52,7 +52,7 @@ class PrefixController extends BaseController
             'operateurs'   => $operateurs
         ];
 
-        return view('prefix/form', $data);
+        return view('admin/prefix/form', $data);
     }
 
     /**
@@ -131,7 +131,7 @@ class PrefixController extends BaseController
             'operateurs'   => $operateurs
         ];
 
-        return view('prefix/form', $data);
+        return view('admin/prefix/form', $data);
     }
 
     /**

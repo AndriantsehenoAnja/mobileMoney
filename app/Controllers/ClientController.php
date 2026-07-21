@@ -234,12 +234,13 @@ class ClientController extends BaseController
         if (!$prefixeInfo) {
             return redirect()->back()->with('error', 'Numéro destinataire non reconnu.');
         }
-
+        $reduction = 0.0;
         $estNotreOperateur = (bool) $prefixeInfo['est_notre_operateur'];
         $typeOperationId = $estNotreOperateur ? 3 : 4; // 3: Interne, 4: Inter-opérateur
 
         // RÈGLE V2 : Pas de frais de retrait inclus pour les autres opérateurs
         if (!$estNotreOperateur) {
+            $reduction = $prefixeInfo->op_id;
             $inclureFraisRetrait = false;
         }
 
@@ -266,7 +267,12 @@ class ClientController extends BaseController
             $fraisRetraitInclus = $baremeRetrait ? (float)$baremeRetrait['frais'] : 0.0;
         }
 
-        $fraisTotal = $fraisBase + $fraisCommission + $fraisRetraitInclus;
+        if($reduction!=0){
+            $fraisTotal = ($fraisBase - ($fraisBase*$reduction/100)) + $fraisCommission + $fraisRetraitInclus;
+        }else{
+            $fraisTotal = $fraisBase  + $fraisCommission + $fraisRetraitInclus;
+        }
+
         $totalA_Deduire = $montant + $fraisTotal;
 
         $compteSource = $this->compteModel->where('client_id', $clientId)->first();

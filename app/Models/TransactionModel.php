@@ -242,6 +242,8 @@ class TransactionModel extends Model
 
         $compteModel = model('CompteModel');
 
+
+        
         // Vérifier le solde du compte source
         if (!$compteModel->soldeSuffisant($compteSourceId, $montant + $frais)) {
             $db->transRollback();

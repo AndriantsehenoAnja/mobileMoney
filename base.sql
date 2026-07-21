@@ -19,6 +19,17 @@ CREATE TABLE operateurs (
     est_notre_operateur INTEGER DEFAULT 0 
 );
 
+CREATE TABLE promossion(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    operateur_id INT,
+    pourcentage NUMERIC
+);
+INSERT into promossion(id,operateur_id,pourcentage)values
+(1,1,50),
+(2,2,50),
+(3,3,50),
+(4,4,50);
+
 -- 2. Table Prefixes
 CREATE TABLE prefixes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
